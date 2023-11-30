@@ -1,3 +1,31 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# cppstats is a suite of analyses for measuring C preprocessor-based
+# variability in software product lines.
+# Copyright (C) 2014-2015 University of Passau, Germany
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program.  If not, see
+# <http://www.gnu.org/licenses/>.
+#
+# Contributors:
+#     Claus Hunsen <hunsen@fim.uni-passau.de>
+#     Andreas Ringlstetter <andreas.ringlstetter@gmail.com>
+
+
+# #################################################
+# imports from the std-library
+
 import os
 import sys
 import shutil  # for copying files and folders
@@ -9,6 +37,52 @@ from abc import ABCMeta, abstractmethod  # abstract classes
 from argparse import ArgumentParser, RawTextHelpFormatter  # for parameters to this script
 from collections import OrderedDict  # for ordered dictionaries
 
+# #################################################
+# imports from subfolders
+
+import cli
+
+# import different kinds of analyses
+import archInfo
+
+
+# #################################################
+# global constants
+
+
+
+# #################################################
+# platform specific preliminaries
+
+# cf. https://docs.python.org/2/library/sys.html#sys.platform
+__platform = sys.platform.lower()
+
+__iscygwin = False
+if (__platform.startswith("cygwin")):
+    __iscygwin = True
+elif (__platform.startswith("darwin") or __platform.startswith("linux")):
+    pass
+else:
+    print "Your system '" + __platform + "' is not supported right now."
+
+
+# #################################################
+# helper functions
+
+def notify(message):
+    if (__iscygwin):
+        return
+
+        # FIXME enable notifications again!
+        # import pynotify  # for system notifications
+        #
+        # pynotify.init("cppstats")
+        # notice = pynotify.Notification(message)
+        # notice.show()
+
+
+# #################################################
+# abstract analysis thread
 
 class AbstractAnalysisThread(object):
     '''This class analyzes a whole project according to the given kind of analysis in an independent thread.'''
@@ -105,13 +179,10 @@ class AbstractAnalysisThread(object):
         pass
 
 
-# #################################################
-# analysis-thread implementations
-
-class GeneralAnalysisThread(AbstractAnalysisThread):
+class ArchInfoAnalysisThread(AbstractAnalysisThread):
     @classmethod
     def getName(cls):
-        return "general"
+        return "archinfo"
 
     @classmethod
     def getPreparationFolder(self):
@@ -119,22 +190,132 @@ class GeneralAnalysisThread(AbstractAnalysisThread):
 
     @classmethod
     def getResultsFile(self):
-        return general.getResultsFile()
+        return archInfo.getResultsFile()
 
     @classmethod
     def addCommandLineOptions(cls, optionParser):
         title = "Options for analysis '" + cls.getName() + "'"
         group = optionParser.add_argument_group(title.upper())
-        general.addCommandLineOptions(group)
+        archInfo.addCommandLineOptions(group)
 
     def analyze(self, folder):
-        general.process(folder, self.options)
+        archInfo.apply(folder, self.options)
+
+
+# #################################################
+# collection of analysis threads
+
+# add all subclass of AbstractAnalysisThread as available analysis kinds
+__analysiskinds = []
+for cls in AbstractAnalysisThread.__subclasses__():
+    entry = (cls.getName(), cls)
+    __analysiskinds.append(entry)
+
+# exit, if there are no analysis threads available
+if (len(__analysiskinds) == 0):
+    print "ERROR: No analysis tasks found! Revert your changes or call the maintainer."
+    print "Exiting now..."
+    sys.exit(1)
+
+__analysiskinds = OrderedDict(__analysiskinds)
+
+
+def getKinds():
+    return __analysiskinds
 
 
 # #################################################
 # main method
 
 
-def processFile(kind, inputfile, options):
+def applyFile(kind, inputfile, options):
+    kinds = getKinds()
+
+    # get proper preparation thread and call it
+    threadClass = kinds[kind]
     thread = threadClass(options, inputfile=inputfile)
     thread.run()
+
+
+def getFoldersFromInputListFile(inputlist):
+    ''' This method reads the given inputfile line-wise and returns the read lines without line breaks.'''
+
+    file = open(inputlist, 'r')  # open input file
+    folders = file.read().splitlines()  # read lines from file without line breaks
+    file.close()  # close file
+
+    folders = filter(lambda f: not f.startswith("#"), folders)  # remove commented lines
+    folders = filter(os.path.isdir, folders)  # remove all non-directories
+    folders = map(os.path.normpath, folders) # normalize paths for easier transformations
+
+    #TODO log removed folders
+
+    return folders
+
+
+def applyFolders(kind, inputlist, options):
+    kinds = getKinds()
+
+    # get the list of projects/folders to process
+    folders = getFoldersFromInputListFile(inputlist)
+
+    # for each folder:
+    for folder in folders:
+        # start preparations for this single folder
+
+        # get proper preparation thread and call it
+        threadClass = kinds[kind]
+        thread = threadClass(options, inputfolder=folder)
+        thread.run()
+
+
+def applyFoldersAll(inputlist, options):
+    kinds = getKinds()
+    for kind in kinds.keys():
+        applyFolders(kind, inputlist, options)
+
+
+def main():
+    kinds = getKinds()
+
+    # #################################################
+    # options parsing
+
+    options = cli.getOptions(kinds, step=cli.steps.ANALYSIS)
+
+    # #################################################
+    # main
+
+    if (options.inputfile):
+
+        # split --file argument
+        options.infile = os.path.normpath(os.path.abspath(options.inputfile[0]))  # IN
+        options.outfile = os.path.normpath(os.path.abspath(options.inputfile[1]))  # OUT
+
+        # check if inputfile exists
+        if (not os.path.isfile(options.infile)):
+            print "ERROR: input file '{}' cannot be found!".format(options.infile)
+            sys.exit(1)
+
+        applyFile(options.kind, options.infile, options)
+
+    elif (options.inputlist):
+        # handle --list argument
+        options.inputlist = os.path.normpath(os.path.abspath(options.inputlist))  # LIST
+
+        # check if list file exists
+        if (not os.path.isfile(options.inputlist)):
+            print "ERROR: input file '{}' cannot be found!".format(options.inputlist)
+            sys.exit(1)
+
+        if (options.allkinds):
+            applyFoldersAll(options.inputlist, options)
+        else:
+            applyFolders(options.kind, options.inputlist, options)
+
+    else:
+        print "This should not happen! No input file or list of projects given!"
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()

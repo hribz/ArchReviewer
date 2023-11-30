@@ -39,10 +39,10 @@ from collections import OrderedDict
 # #################################################
 # paths
 
-import preparations
+import xmlTrans
 
 def getPreparationScript(filename):
-    return os.path.join(os.path.dirname(preparations.__file__), filename)
+    return os.path.join(os.path.dirname(xmlTrans.__file__), filename)
 
 
 # #################################################
@@ -53,7 +53,7 @@ import cli
 # for rewriting of #ifdefs to "if defined(..)"
 # for turning multiline macros to oneliners
 # for deletion of include guards in H files
-from preparations import rewriteIfdefs, rewriteMultilineMacros, deleteIncludeGuards
+from xmlTrans import rewriteIfdefs, rewriteMultilineMacros, deleteIncludeGuards
 
 from lib import cpplib
 
@@ -344,7 +344,7 @@ class AbstractPreparationThread(object):
         self.backupCurrentFile()  # backup file
 
         # delete include guards
-        deleteIncludeGuards.process(self.currentFile, open(tmp, 'w'))
+        deleteIncludeGuards.apply(self.currentFile, open(tmp, 'w'))
 
         # move temp file to output file
         shutil.move(tmp, self.currentFile)
@@ -382,10 +382,10 @@ class AbstractPreparationThread(object):
 # #################################################
 # preparation-thread implementations
 
-class GeneralPreparationThread(AbstractPreparationThread):
+class ArchInfoPreparationThread(AbstractPreparationThread):
     @classmethod
     def getPreparationName(cls):
-        return "general"
+        return "archinfo"
 
     def getSubfolder(self):
         return "_cppstats"
@@ -521,6 +521,95 @@ def getKinds():
 # main method
 
 
-def processFile(inputfile, options):
+def applyFile(kind, inputfile, options):
+    kinds = getKinds()
+
+    # get proper preparation thread and call it
+    threadClass = kinds[kind]
     thread = threadClass(options, inputfile=inputfile)
     thread.run()
+
+
+def getFoldersFromInputListFile(inputlist):
+    ''' This method reads the given inputfile line-wise and returns the read lines without line breaks.'''
+
+    file = open(inputlist, 'r')  # open input file
+    folders = file.read().splitlines()  # read lines from file without line breaks
+    file.close()  # close file
+
+    folders = filter(lambda f: not f.startswith("#"), folders)  # remove commented lines
+    folders = filter(os.path.isdir, folders)  # remove all non-directories
+    folders = map(os.path.normpath, folders)  # normalize paths for easier transformations
+
+    # TODO log removed folders
+
+    return folders
+
+
+def applyFolders(kind, inputlist, options):
+    kinds = getKinds()
+
+    # get the list of projects/folders to process
+    folders = getFoldersFromInputListFile(inputlist)
+
+    # for each folder:
+    for folder in folders:
+        # start preparations for this single folder
+
+        # get proper preparation thread and call it
+        threadClass = kinds[kind]
+        thread = threadClass(options, inputfolder=folder)
+        thread.run()
+
+
+def applyFoldersAll(inputlist, options):
+    kinds = getKinds()
+    for kind in kinds.keys():
+        applyFolders(kind, inputlist, options)
+
+
+def main():
+    kinds = getKinds()
+
+    # #################################################
+    # options parsing
+
+    options = cli.getOptions(kinds, step=cli.steps.PREPARATION)
+
+    # #################################################
+    # main
+
+    if (options.inputfile):
+
+        # split --file argument
+        options.infile = os.path.normpath(os.path.abspath(options.inputfile[0]))  # IN
+        options.outfile = os.path.normpath(os.path.abspath(options.inputfile[1]))  # OUT
+
+        # check if inputfile exists
+        if (not os.path.isfile(options.infile)):
+            print "ERROR: input file '{}' cannot be found!".format(options.infile)
+            sys.exit(1)
+
+        applyFile(options.kind, options.infile, options)
+
+    elif (options.inputlist):
+        # handle --list argument
+        options.inputlist = os.path.normpath(os.path.abspath(options.inputlist))  # LIST
+
+        # check if list file exists
+        if (not os.path.isfile(options.inputlist)):
+            print "ERROR: input file '{}' cannot be found!".format(options.inputlist)
+            sys.exit(1)
+
+        if (options.allkinds):
+            applyFoldersAll(options.inputlist, options)
+        else:
+            applyFolders(options.kind, options.inputlist, options)
+
+    else:
+        print "This should not happen! No input file or list of projects given!"
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
