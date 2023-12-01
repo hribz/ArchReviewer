@@ -40,7 +40,7 @@ from collections import OrderedDict  # for ordered dictionaries
 # #################################################
 # imports from subfolders
 
-import cli
+import tools.cli as cli
 
 # import different kinds of analyses
 import archInfo

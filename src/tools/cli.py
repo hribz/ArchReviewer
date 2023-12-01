@@ -30,8 +30,8 @@ from argparse import ArgumentParser, RawTextHelpFormatter, _VersionAction  # for
 # #################################################
 # imports from subfolders
 
-import xmlGen, analysis
-import cppstats as cstats # import cppstats.py and avoid confusion with module
+import xmlTrans.xmlGen as xmlGen, analysis
+import main as cstats
 
 
 # #################################################

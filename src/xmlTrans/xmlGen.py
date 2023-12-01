@@ -48,7 +48,7 @@ def getPreparationScript(filename):
 # #################################################
 # imports from subfolders
 
-import cli
+import tools.cli as cli
 
 # for rewriting of #ifdefs to "if defined(..)"
 # for turning multiline macros to oneliners

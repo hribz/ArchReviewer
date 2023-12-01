@@ -1,0 +1,13 @@
+{
+	"x86_64": { 
+		"include_file_name": ["immintrin.h"],
+		"macro_names": ["__x86_64__", "__amd64__"],
+		"intrinsics": [""]
+	},
+	"arm": {
+		
+	},
+	"aarch64": {
+		
+	}
+}
