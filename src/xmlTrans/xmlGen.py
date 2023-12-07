@@ -48,14 +48,12 @@ def getPreparationScript(filename):
 # #################################################
 # imports from subfolders
 
-import tools.cli as cli
+import cli
 
 # for rewriting of #ifdefs to "if defined(..)"
 # for turning multiline macros to oneliners
 # for deletion of include guards in H files
 from xmlTrans import rewriteIfdefs, rewriteMultilineMacros, deleteIncludeGuards
-
-from lib import cpplib
 
 # #################################################
 # global constants

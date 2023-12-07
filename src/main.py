@@ -43,7 +43,7 @@ import tempfile # for temporary files
 # imports from subfolders
 
 # import different kinds of analyses
-import tools.cli as cli, xmlTrans.xmlGen as xmlGen, analysis
+import cli, xmlTrans.xmlGen as xmlGen, analysis
 
 
 # #################################################

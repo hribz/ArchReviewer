@@ -1,31 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# cppstats is a suite of analyses for measuring C preprocessor-based
-# variability in software product lines.
-# Copyright (C) 2014-2015 University of Passau, Germany
-#
-# This program is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published
-# by the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program.  If not, see
-# <http://www.gnu.org/licenses/>.
-#
-# Contributors:
-#     Claus Hunsen <hunsen@fim.uni-passau.de>
-#     Andreas Ringlstetter <andreas.ringlstetter@gmail.com>
-
-
-# #################################################
-# imports from the std-library
-
 import os
 import sys
 import shutil  # for copying files and folders
@@ -37,48 +9,7 @@ from abc import ABCMeta, abstractmethod  # abstract classes
 from argparse import ArgumentParser, RawTextHelpFormatter  # for parameters to this script
 from collections import OrderedDict  # for ordered dictionaries
 
-# #################################################
-# imports from subfolders
-
-import tools.cli as cli
-
-# import different kinds of analyses
 import archInfo
-
-
-# #################################################
-# global constants
-
-
-
-# #################################################
-# platform specific preliminaries
-
-# cf. https://docs.python.org/2/library/sys.html#sys.platform
-__platform = sys.platform.lower()
-
-__iscygwin = False
-if (__platform.startswith("cygwin")):
-    __iscygwin = True
-elif (__platform.startswith("darwin") or __platform.startswith("linux")):
-    pass
-else:
-    print "Your system '" + __platform + "' is not supported right now."
-
-
-# #################################################
-# helper functions
-
-def notify(message):
-    if (__iscygwin):
-        return
-
-        # FIXME enable notifications again!
-        # import pynotify  # for system notifications
-        #
-        # pynotify.init("cppstats")
-        # notice = pynotify.Notification(message)
-        # notice.show()
 
 
 # #################################################
@@ -273,49 +204,3 @@ def applyFoldersAll(inputlist, options):
     kinds = getKinds()
     for kind in kinds.keys():
         applyFolders(kind, inputlist, options)
-
-
-def main():
-    kinds = getKinds()
-
-    # #################################################
-    # options parsing
-
-    options = cli.getOptions(kinds, step=cli.steps.ANALYSIS)
-
-    # #################################################
-    # main
-
-    if (options.inputfile):
-
-        # split --file argument
-        options.infile = os.path.normpath(os.path.abspath(options.inputfile[0]))  # IN
-        options.outfile = os.path.normpath(os.path.abspath(options.inputfile[1]))  # OUT
-
-        # check if inputfile exists
-        if (not os.path.isfile(options.infile)):
-            print "ERROR: input file '{}' cannot be found!".format(options.infile)
-            sys.exit(1)
-
-        applyFile(options.kind, options.infile, options)
-
-    elif (options.inputlist):
-        # handle --list argument
-        options.inputlist = os.path.normpath(os.path.abspath(options.inputlist))  # LIST
-
-        # check if list file exists
-        if (not os.path.isfile(options.inputlist)):
-            print "ERROR: input file '{}' cannot be found!".format(options.inputlist)
-            sys.exit(1)
-
-        if (options.allkinds):
-            applyFoldersAll(options.inputlist, options)
-        else:
-            applyFolders(options.kind, options.inputlist, options)
-
-    else:
-        print "This should not happen! No input file or list of projects given!"
-        sys.exit(1)
-
-if __name__ == '__main__':
-    main()
