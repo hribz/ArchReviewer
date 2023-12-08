@@ -1,2 +1,5 @@
 *.pyc
 test/*
+build
+ArchReviewer.egg-info
+dist

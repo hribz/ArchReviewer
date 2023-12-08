@@ -1,4 +1,3 @@
-import csv
 import os
 import re
 import sys
@@ -36,8 +35,6 @@ __conditionals_endif = ['endif']
 __conditionals_all = __conditionals + __conditionals_elif + \
         __conditionals_else
 __macro_define = ['define']
-__macrofuncs = {}       # functional macros like: "GLIBVERSION(2,3,4)",
-                        # used as "GLIBVERSION(x,y,z) 100*x+10*y+z"
 __curfile = ''          # current processed xml-file
 __defset = set()        # macro-objects
 __defsetf = dict()      # macro-objects per file
@@ -200,6 +197,8 @@ def analysisPass(folder, options, first):
 
     for file in files:
         __curfile = file
+        if not __defsetf.has_key(__curfile):
+            __defsetf[__curfile] = set()
         fcount += 1
         print('INFO: parsing file (%5d) of (%5d) -- (%s).' % (fcount, ftotal, os.path.join(folder, file)))
 
@@ -222,6 +221,7 @@ def analysisPass(folder, options, first):
         # collect arch info
         if first:
             __old_tree_root = __cpp_root
+
         else:
             __new_tree_root = __cpp_root
 
@@ -243,9 +243,8 @@ def resetModule() :
     __defsetf = dict()      # macro-objects per file
 
 
-def apply(old_commit_folder, new_commit_folder, options):
-    analysisPass(old_commit_folder, options, True)
-    analysisPass(new_commit_folder, options, False)
+def apply(folder, options):
+    analysisPass(folder, options, True)
 
 def addCommandLineOptionsMain(optionparser):
     ''' add command line options for a direct call of this script'''

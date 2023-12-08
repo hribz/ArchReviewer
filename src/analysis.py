@@ -1,10 +1,6 @@
 import os
 import sys
 import shutil  # for copying files and folders
-import errno  # for error/exception handling
-import threading  # for parallelism
-import subprocess  # for calling other commands
-import re  # for regular expressions
 from abc import ABCMeta, abstractmethod  # abstract classes
 from argparse import ArgumentParser, RawTextHelpFormatter  # for parameters to this script
 from collections import OrderedDict  # for ordered dictionaries
@@ -130,7 +126,7 @@ class ArchInfoAnalysisThread(AbstractAnalysisThread):
         archInfo.addCommandLineOptions(group)
 
     def analyze(self, folder):
-        archInfo.apply(self.old_commit_folder, self.new_commit_folder, self.options)
+        archInfo.apply(folder, self.options)
 
 
 # #################################################

@@ -1,7 +1,5 @@
 import os
 import sys
-#import pynotify  # for system notifications
-from argparse import ArgumentParser, RawTextHelpFormatter  # for parameters to this script
 from collections import OrderedDict  # for ordered dictionaries
 import tempfile # for temporary files
 import cli, xmlTrans.xmlGen as xmlGen, analysis

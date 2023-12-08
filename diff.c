@@ -11,10 +11,15 @@ int a=0;
 
 #ifdef __x86_64__
 #define x86_defined 1
+
+int c0;
+
 #elif defined(__arm__)
 #define arm_defined 2
-#elif defined(__aarch64__)
+int c1;
+#elif defined(__aarch64__) || defined(__arm__)
 #define aarch_defined 3
+int c2;
 #endif
 
 int main() {
@@ -25,5 +30,6 @@ int main() {
     #if arm_defined
     printf("arm\n");
     #endif
+    printf("git diff");
     return 0;
 }
