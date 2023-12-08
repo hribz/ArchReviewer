@@ -4,3 +4,4 @@ test/*
 build
 ArchReviewer.egg-info
 dist
+input.txt
