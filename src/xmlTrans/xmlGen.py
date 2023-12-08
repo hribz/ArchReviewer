@@ -269,35 +269,6 @@ class AbstractPreparationThread(object):
 
         os.remove(tmp)  # remove temp file
 
-    def formatCode(self):
-        tmp = self.currentFile + "tmp.txt"
-
-        self.backupCurrentFile()  # backup file
-
-        # call astyle to format file in Java-style
-        shutil.move(self.currentFile, tmp)  # move for script
-        runBashCommand(["astyle", "--style=java"], stdin=open(tmp, 'r'), stdout=open(self.currentFile, 'w+'))
-
-        os.remove(tmp)  # remove temp file
-
-    def deleteComments(self):
-        tmp = self.currentFile + "tmp.xml"
-        tmp_out = self.currentFile + "tmp_out.xml"
-
-        self.backupCurrentFile()  # backup file
-
-        # call src2srcml to transform code to xml
-        src2srcml(self.currentFile, tmp)
-
-        # delete all comments in the xml and write to another file
-        runBashCommand(["xsltproc", getPreparationScript("deleteComments.xsl"), tmp], stdout=open(tmp_out, 'w+'))
-
-        # re-transform the xml to a normal source file
-        srcml2src(tmp_out, self.currentFile)
-
-        # delete temp files
-        silentlyRemoveFile(tmp)
-        silentlyRemoveFile(tmp_out)
 
     def deleteWhitespace(self):
         """deletes leading, trailing and inter (# ... if) whitespaces,
@@ -320,54 +291,6 @@ class AbstractPreparationThread(object):
         # move temp file to output file
         shutil.move(tmp, self.currentFile)
 
-    def rewriteIfdefsAndIfndefs(self):
-        tmp = self.currentFile + "tmp.txt"
-
-        self.backupCurrentFile()  # backup file
-
-        # rewrite #if(n)def ... to #if (!)defined(...)
-        d = rewriteIfdefs.rewriteFile(self.currentFile, open(tmp, 'w'))
-
-        # move temp file to output file
-        shutil.move(tmp, self.currentFile)
-
-    def removeIncludeGuards(self):
-        # include guards only exist in H files, otherwise return
-        _, extension = os.path.splitext(self.currentFile)
-        if (extension not in _filepattern_h):
-            return
-
-        tmp = self.currentFile + "tmp.txt"
-
-        self.backupCurrentFile()  # backup file
-
-        # delete include guards
-        deleteIncludeGuards.apply(self.currentFile, open(tmp, 'w'))
-
-        # move temp file to output file
-        shutil.move(tmp, self.currentFile)
-
-    def removeOtherPreprocessor(self):
-        tmp = self.currentFile + "tmp.txt"
-
-        self.backupCurrentFile()  # backup file
-
-        # delete other preprocessor statements than #ifdefs
-        cpplib._filterAnnotatedIfdefs(self.currentFile, tmp)
-
-        # move temp file to output file
-        shutil.copyfile(tmp, self.currentFile)
-
-    def deleteEmptyLines(self):
-        tmp = self.currentFile + "tmp.txt"
-
-        self.backupCurrentFile()  # backup file
-
-        # remove empty lines
-        stripEmptyLinesFromFile(self.currentFile, tmp)
-
-        # move temp file to output file
-        shutil.move(tmp, self.currentFile)
 
     def transformFileToSrcml(self):
         source = self.currentFile
@@ -392,106 +315,11 @@ class ArchInfoPreparationThread(AbstractPreparationThread):
         # multiline macros
         self.rewriteMultilineMacros()
 
-        # delete comments
-        self.deleteComments()
-
         # delete leading, trailing and inter (# ... if) whitespaces
         self.deleteWhitespace()
 
-        # rewrite #if(n)def ... to #if (!)defined(...)
-        self.rewriteIfdefsAndIfndefs()
-
-        # removes include guards from H files
-        self.removeIncludeGuards()
-
-        # delete empty lines
-        self.deleteEmptyLines()
-
         # transform file to srcml
         self.transformFileToSrcml()
-
-
-class DisciplinePreparationThread(AbstractPreparationThread):
-    @classmethod
-    def getPreparationName(cls):
-        return "discipline"
-
-    def getSubfolder(self):
-        return "_cppstats_discipline"
-
-    def prepareFile(self):
-        # multiline macros
-        self.rewriteMultilineMacros()
-
-        # delete comments
-        self.deleteComments()
-
-        # delete leading, trailing and inter (# ... if) whitespaces
-        self.deleteWhitespace()
-
-        # rewrite #if(n)def ... to #if (!)defined(...)
-        self.rewriteIfdefsAndIfndefs()
-
-        # removes include guards from H files
-        self.removeIncludeGuards()
-
-        # removes other preprocessor than #ifdefs
-        self.removeOtherPreprocessor()
-
-        # delete empty lines
-        self.deleteEmptyLines()
-
-        # transform file to srcml
-        self.transformFileToSrcml()
-
-
-class FeatureLocationsPreparationThread(AbstractPreparationThread):
-    @classmethod
-    def getPreparationName(cls):
-        return "featurelocations"
-
-    def getSubfolder(self):
-        return "_cppstats_featurelocations"
-
-    def prepareFile(self):
-        # multiline macros
-        self.rewriteMultilineMacros()
-
-        # delete comments
-        self.deleteComments()
-
-        # delete leading, trailing and inter (# ... if) whitespaces
-        self.deleteWhitespace()
-
-        # FIXME remove include guards?!
-
-        # rewrite #if(n)def ... to #if (!)defined(...)
-        self.rewriteIfdefsAndIfndefs()
-
-        # transform file to srcml
-        self.transformFileToSrcml()
-
-
-class PrettyPreparationThread(AbstractPreparationThread):
-    @classmethod
-    def getPreparationName(cls):
-        return "pretty"
-
-    def getSubfolder(self):
-        return "_cppstats_pretty"
-
-    def prepareFile(self):
-        # multiline macros
-        self.rewriteMultilineMacros()
-
-        # format the code
-        self.formatCode()
-
-        # # delete comments
-        # self.deleteComments()
-        #
-        # # delete empty lines
-        # self.deleteEmptyLines()
 
 
 # #################################################
@@ -564,50 +392,3 @@ def applyFoldersAll(inputlist, options):
     kinds = getKinds()
     for kind in kinds.keys():
         applyFolders(kind, inputlist, options)
-
-
-def main():
-    kinds = getKinds()
-
-    # #################################################
-    # options parsing
-
-    options = cli.getOptions(kinds, step=cli.steps.PREPARATION)
-
-    # #################################################
-    # main
-
-    if (options.inputfile):
-
-        # split --file argument
-        options.infile = os.path.normpath(os.path.abspath(options.inputfile[0]))  # IN
-        options.outfile = os.path.normpath(os.path.abspath(options.inputfile[1]))  # OUT
-
-        # check if inputfile exists
-        if (not os.path.isfile(options.infile)):
-            print "ERROR: input file '{}' cannot be found!".format(options.infile)
-            sys.exit(1)
-
-        applyFile(options.kind, options.infile, options)
-
-    elif (options.inputlist):
-        # handle --list argument
-        options.inputlist = os.path.normpath(os.path.abspath(options.inputlist))  # LIST
-
-        # check if list file exists
-        if (not os.path.isfile(options.inputlist)):
-            print "ERROR: input file '{}' cannot be found!".format(options.inputlist)
-            sys.exit(1)
-
-        if (options.allkinds):
-            applyFoldersAll(options.inputlist, options)
-        else:
-            applyFolders(options.kind, options.inputlist, options)
-
-    else:
-        print "This should not happen! No input file or list of projects given!"
-        sys.exit(1)
-
-
-if __name__ == '__main__':
-    main()

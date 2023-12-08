@@ -48,7 +48,6 @@ class AbstractAnalysisThread(object):
 
     def startup(self):
         # LOGGING
-        notify("starting '" + self.getName() + "' analysis:\n " + self.project)
         print "# starting '" + self.getName() + "' analysis: " + self.project
 
     def teardown(self):
@@ -58,7 +57,6 @@ class AbstractAnalysisThread(object):
             shutil.rmtree(self.tmpfolder)
 
         # LOGGING
-        notify("finished '" + self.getName() + "' analysis:\n " + self.project)
         print "# finished '" + self.getName() + "' analysis: " + self.project
 
     def run(self):
