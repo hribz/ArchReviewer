@@ -44,3 +44,19 @@ System:
     ```bash
     sudo python setup.py install
     ```
+
+4. supply work folder path in 'input.txt', for example:
+
+    ```
+    /path/to/ArchReviewer/test
+    ```
+    
+    and the source code to analysis should be stored at path '/path/to/ArchReviewer/test/source'
+
+5. run command
+
+    ```bash
+    ArchReviewer --kind=archinfo
+    ```
+
+    then, analysis result will be store at path '/path/to/ArchReviewer/test/_ArchReviewer'
