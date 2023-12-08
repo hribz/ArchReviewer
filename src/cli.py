@@ -1,29 +1,3 @@
-# -*- coding: utf-8 -*-
-# cppstats is a suite of analyses for measuring C preprocessor-based
-# variability in software product lines.
-# Copyright (C) 2014-2015 University of Passau, Germany
-#
-# This program is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published
-# by the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program.  If not, see
-# <http://www.gnu.org/licenses/>.
-#
-# Contributors:
-#     Claus Hunsen <hunsen@fim.uni-passau.de>
-
-
-# #################################################
-# imports from the std-library
-
 import sys
 from argparse import ArgumentParser, RawTextHelpFormatter, _VersionAction  # for parameters to this script
 
@@ -48,7 +22,7 @@ __inputlist_default = "input.txt"
 
 
 # #################################################
-# definition of cppstats steps
+# definition of ArchReviewer steps
 class steps(Enum):
     ALL = 0
     PREPARATION = 1
@@ -58,15 +32,7 @@ class steps(Enum):
 # #################################################
 # custom actions
 
-class CppstatsVersionAction(_VersionAction):
-    # FIXME not needed for Python 3.4+! see http://bugs.python.org/issue18920
-    '''
-        subclass to _VersionAction as that class prints version information
-        to ``stderr``, but this subclass prints to ``stdout`` instead.
-
-        Note: This is default in Python 3.4+.
-    '''
-
+class ArchReviewerVersionAction(_VersionAction):
     def __init__(self, *args, **kwargs):
         """Initialisation method for the _VersionAction class"""
         _VersionAction.__init__(self, *args, **kwargs)
@@ -88,22 +54,10 @@ class CppstatsVersionAction(_VersionAction):
 # construct ArgumentParser
 
 def getOptions(kinds, step=steps.ALL):
-    """
-    Constructs the parser needed for cppstats. Includes following procedure:
-      * addition of step-specific arguments
-      * parsing
-      * addition of constants
-      * checking of constraints
-
-    :arg kinds : the list of preperation/analysis kinds, dependent on the step parameter
-    :arg step : the variant of cppstats to execute: one of cli.steps (ALL, PREPARATION, ANALYSIS)
-    :rtype : the resulting options
-    """
-
     parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 
-    # version (uses CppstatsVersionAction instead of 'version' as action)
-    parser.add_argument('--version', action=CppstatsVersionAction, version=cstats.version())
+    # version (uses ArchReviewerVersionAction instead of 'version' as action)
+    parser.add_argument('--version', action=ArchReviewerVersionAction, version=cstats.version())
 
 
     # ADD KIND ARGUMENT
@@ -154,7 +108,7 @@ def getOptions(kinds, step=steps.ALL):
                                  "(0=paths to srcML files, 1=paths to source files)")
         parser.add_argument("--filenamesRelative", action="store_true", dest="filenamesRelative", default=False,
                             help="print relative file names [default: %(default)s]\n"
-                                 "e.g., '/projects/apache/_cppstats/afile.c.xml' gets 'afile.c.xml'.")
+                                 "e.g., '/projects/apache/_ArchReviewer/afile.c.xml' gets 'afile.c.xml'.")
 
 
     # ADD POSSIBLE PREPARATION/ANALYSIS KINDS AND THEIR COMMAND-LINE ARGUMENTS
@@ -188,12 +142,6 @@ def getOptions(kinds, step=steps.ALL):
 
     addConstants(options)
 
-
-    # CHECK CONSTRAINTS ON OPTIONS
-
-    checkConstraints(options)
-
-
     # RETURN
 
     return options
@@ -204,10 +152,3 @@ def addConstants(options):
     # --filenames
     options.FILENAME_SRCML = 0
     options.FILENAME_SOURCE = 1
-
-
-def checkConstraints(options):
-    # constraints
-    if (options.allkinds == True and options.inputfile):
-        print "Using all kinds of preparation for a single input and output file is weird!"
-        sys.exit(1)

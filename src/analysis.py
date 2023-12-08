@@ -27,6 +27,8 @@ class AbstractAnalysisThread(object):
             self.file = None
             self.folder = os.path.join(inputfolder, self.getPreparationFolder())
             self.project = os.path.basename(self.folder)
+            self.old_commit_folder = os.path.join(self.folder, "old_commit")
+            self.new_commit_folder = os.path.join(self.folder, "new_commit")
 
         elif (inputfile):
             self.file = inputfile
@@ -115,7 +117,7 @@ class ArchInfoAnalysisThread(AbstractAnalysisThread):
 
     @classmethod
     def getPreparationFolder(self):
-        return "_cppstats"
+        return "_ArchReviewer"
 
     @classmethod
     def getResultsFile(self):
@@ -128,7 +130,7 @@ class ArchInfoAnalysisThread(AbstractAnalysisThread):
         archInfo.addCommandLineOptions(group)
 
     def analyze(self, folder):
-        archInfo.apply(folder, self.options)
+        archInfo.apply(self.old_commit_folder, self.new_commit_folder, self.options)
 
 
 # #################################################

@@ -13,7 +13,7 @@ from cpp_tree import *
 
 ##################################################
 # config:
-__outputfile = "arch_info.json"
+__outputfile = "arch_info_result.json"
 
 # error numbers:
 __errorfexp = 0
@@ -98,11 +98,12 @@ class NoEquivalentSigError(Exception):
         return ("No equivalent signature found!")
 
 class IfdefEndifMismatchError(Exception):
-    def __init__(self, loc):
+    def __init__(self, loc, msg=""):
         self.loc=loc
+        self.msg=msg
         pass
     def __str__(self):
-        return ("Ifdef and endif do not match!")
+        return ("Ifdef and endif do not match! (loc: %s, msg: %s)")
 
 ##################################################
 
@@ -176,20 +177,16 @@ def buildCppTree(root):
         if ((tag in __conditionals_endif) and (event == "start") and (ns == __cppnscpp)):
             if (len(node_stack)==1):
                 raise IfdefEndifMismatchError(src_line)
-            node_stack.pop()
+            node_stack.pop().parent.endifLoc = src_line
 
     if (len(node_stack)!=1):
         raise IfdefEndifMismatchError(-1)
+    __cpp_root.verify()
     return 
 
 
-def resetModule() :
-    global __defset, __defsetf
-    __defset = set()        # macro-objects
-    __defsetf = dict()      # macro-objects per file
-
-
-def apply(folder, options):
+def analysisPass(folder, options, first):
+    global __old_tree_root, __new_tree_root
     resetModule()
 
     # outputfile
@@ -216,26 +213,39 @@ def apply(folder, options):
         try:
             buildCppTree(root)
         except IfdefEndifMismatchError as e:
-            print("ERROR: ifdef-endif mismatch in file (%s:%s)" % (os.path.join(folder, file), e.loc))
+            print("ERROR: ifdef-endif mismatch in file (%s:%s msg: %s)" % (os.path.join(folder, file), e.loc, e.msg))
             continue
         
         print(__defsetf[__curfile])
         print(__cpp_root)
 
         # collect arch info
-
+        if first:
+            __old_tree_root = __cpp_root
+        else:
+            __new_tree_root = __cpp_root
 
         #adjust file name if wanted
         if options.filenamesRelative : # relative file name (root is project folder (not included in path))
             file = os.path.relpath(file, folder)
 
-        if options.filenames == options.FILENAME_SRCML : # cppstats file names
-            pass # nothing to do here, as the file path is the cppstats path by default
+        if options.filenames == options.FILENAME_SRCML : # ArchReviewer file names
+            pass # nothing to do here, as the file path is the ArchReviewer path by default
         if options.filenames == options.FILENAME_SOURCE : # source file name
-            file = file.replace(".xml", "").replace("/_cppstats/", "/source/", 1)
+            file = file.replace(".xml", "").replace("/_ArchReviewer/", "/source/", 1)
 
 
     fd.close()
+
+def resetModule() :
+    global __defset, __defsetf
+    __defset = set()        # macro-objects
+    __defsetf = dict()      # macro-objects per file
+
+
+def apply(old_commit_folder, new_commit_folder, options):
+    analysisPass(old_commit_folder, options, True)
+    analysisPass(new_commit_folder, options, False)
 
 def addCommandLineOptionsMain(optionparser):
     ''' add command line options for a direct call of this script'''

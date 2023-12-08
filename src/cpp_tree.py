@@ -1,3 +1,4 @@
+import archInfo
 class Node(object):
     def __init__(self):
         self.parent = None
@@ -15,7 +16,12 @@ class Node(object):
         self.children.append(child)
         child.parent = self
 
+    def verify(self):
+        for child in self.children:
+            child.verify()
+
 class CondNode(Node):
+    endifLoc = -1
     def __init__(self):
         super(CondNode, self).__init__()
 
@@ -25,6 +31,12 @@ class CondNode(Node):
             ret = ret+child.__str__()
         ret = ret + '}'
         return ret
+    
+    def verify(self):
+        if self.endifLoc == -1:
+            raise archInfo.IfdefEndifMismatchError(self.children[0].loc, "line of #endif error")
+        for child in self.children:
+            child.verify()
 
 class CppNode(Node):
     def __init__(self, tag, cond, loc=None):
