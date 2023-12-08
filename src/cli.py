@@ -5,13 +5,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter, _VersionAction  # for
 # imports from subfolders
 
 import xmlTrans.xmlGen as xmlGen, analysis
-import main as cstats
-
-
-# #################################################
-# external modules
-
-# enums
+import archReviewer as cstats
 from enum import Enum
 
 
@@ -100,16 +94,6 @@ def getOptions(kinds, step=steps.ALL):
         parser.add_argument("--nobak", action="store_true", dest="nobak", default=False,
                             help="do not backup files during preparation [default: %(default)s]")
 
-    # add general CLI options applying for all or several analyses
-    if step == steps.ALL or step == steps.ANALYSIS:
-        # constants for the choices of '--filenames' are added in method 'addConstants'
-        parser.add_argument("--filenames", choices=[0, 1], dest="filenames", default=0,
-                            help="determines the file paths to print [default: %(default)s]\n"
-                                 "(0=paths to srcML files, 1=paths to source files)")
-        parser.add_argument("--filenamesRelative", action="store_true", dest="filenamesRelative", default=False,
-                            help="print relative file names [default: %(default)s]\n"
-                                 "e.g., '/projects/apache/_ArchReviewer/afile.c.xml' gets 'afile.c.xml'.")
-
 
     # ADD POSSIBLE PREPARATION/ANALYSIS KINDS AND THEIR COMMAND-LINE ARGUMENTS
 
@@ -134,21 +118,7 @@ def getOptions(kinds, step=steps.ALL):
 
 
     # PARSE OPTIONS
-
     options = parser.parse_args()
-
-
-    # ADD CONSTANTS TO OPTIONS
-
-    addConstants(options)
-
-    # RETURN
 
     return options
 
-
-def addConstants(options):
-    # add option constants
-    # --filenames
-    options.FILENAME_SRCML = 0
-    options.FILENAME_SOURCE = 1

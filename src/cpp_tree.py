@@ -5,6 +5,7 @@ class Node(object):
         self.parent = None
         self.children = []
         self.confirmed = False
+        self.endLoc = -1
 
     def __str__(self):
         ret = '['
@@ -18,13 +19,15 @@ class Node(object):
         child.parent = self
 
     def verify(self):
+        if self.endLoc == -1:
+            raise archInfo.IfdefEndifMismatchError(self.loc, "line of #endif error")
         for child in self.children:
             child.verify()
 
 class CondNode(Node):
-    endifLoc = -1
-    def __init__(self):
+    def __init__(self, loc):
         super(CondNode, self).__init__()
+        self.loc = loc
 
     def __str__(self):
         ret = '{'
@@ -33,18 +36,11 @@ class CondNode(Node):
         ret = ret + '}'
         return ret
     
-    def verify(self):
-        if self.endifLoc == -1:
-            raise archInfo.IfdefEndifMismatchError(self.children[0].loc, "line of #endif error")
-        for child in self.children:
-            child.verify()
-
 class CppNode(Node):
-    def __init__(self, tag, cond, loc=None):
+    def __init__(self, tag, cond, loc):
         super(CppNode, self).__init__()
         self.cond = cond
-        if loc is not None:
-            self.loc = loc
+        self.loc = loc
         self.tag = tag
     
     def __str__(self):

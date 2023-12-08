@@ -11,21 +11,12 @@ from collections import OrderedDict
 # #################################################
 # paths
 
-import xmlTrans
+import src.xmlTrans as xmlTrans
 
 def getPreparationScript(filename):
     return os.path.join(os.path.dirname(xmlTrans.__file__), filename)
 
-
-# #################################################
-# imports from subfolders
-
-import cli
-
-# for rewriting of #ifdefs to "if defined(..)"
-# for turning multiline macros to oneliners
-# for deletion of include guards in H files
-from xmlTrans import rewriteMultilineMacros
+import src.xmlTrans.rewriteMultilineMacros as rewriteMultilineMacros
 
 # #################################################
 # global constants

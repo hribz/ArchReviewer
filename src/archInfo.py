@@ -9,18 +9,12 @@ import pyparsing as pypa
 pypa.ParserElement.enablePackrat() # speed up parsing
 sys.setrecursionlimit(8000)        # handle larger expressions
 from cpp_tree import *
+import json
 
 ##################################################
 # config:
 __outputfile = "arch_info_result.json"
 
-# error numbers:
-__errorfexp = 0
-__errormatch = []
-##################################################
-
-
-##################################################
 # constants:
 # namespace-constant for src2srcml
 __cppnscpp = 'http://www.srcML.org/srcML/cpp'
@@ -38,10 +32,6 @@ __macro_define = ['define']
 __curfile = ''          # current processed xml-file
 __defset = set()        # macro-objects
 __defsetf = dict()      # macro-objects per file
-
-
-##################################################
-
 
 
 ##################################################
@@ -88,12 +78,6 @@ __identifier = \
         pypa.Word(pypa.alphanums+'_'+'-'+'@'+'$').setParseAction(_collectDefines)
 
 
-class NoEquivalentSigError(Exception):
-    def __init__(self):
-        pass
-    def __str__(self):
-        return ("No equivalent signature found!")
-
 class IfdefEndifMismatchError(Exception):
     def __init__(self, loc, msg=""):
         self.loc=loc
@@ -103,17 +87,6 @@ class IfdefEndifMismatchError(Exception):
         return ("Ifdef and endif do not match! (loc: %s, msg: %s)")
 
 ##################################################
-
-
-def _collapseSubElementsToList(node):
-    """This function collapses all subelements of the given element
-    into a list used for getting the signature out of an #ifdef-node."""
-    # get all descendants - recursive - children, children of children ...
-    itdesc = node.itertext()
-
-    # iterate over the elemtents and add them to a list
-    return ''.join([it for it in itdesc])
-
 
 def __getCondStr(ifdefnode):
     """
@@ -134,10 +107,18 @@ def __getCondStr(ifdefnode):
             res = ''.join([token for token in nexpr.itertext()])
     return res
 
+def findMacroNameInDb(macro_name, db):
+    for arch_name, arch_dict in db.items():
+        if 'macro_names' in arch_dict:
+            if macro_name in arch_dict.get('macro_names'):
+                return str(arch_name)
+    return None
 
-def buildCppTree(root):
-    global __cpp_root
+def buildCppTree(root, db):
+    global __cpp_root, __line_and_arch
+    __line_and_arch = dict()
     __cpp_root = CppNode('root', '', -1)
+    __cpp_root.endLoc = 0
     node_stack = [__cpp_root]
 
     for event, elem in etree.iterwalk(root, events=("start", "end")):
@@ -146,27 +127,35 @@ def buildCppTree(root):
 
         if ((tag in __conditionals_all) and (event == 'start') and (ns == __cppnscpp)):
             cond_str = __getCondStr(elem)
+            arch_names = set()
             for event_, operand in etree.iterwalk(elem, events=("start", "end")):
                 ns_, tag_ = __cpprens.match(operand.tag).groups()
                 if ((tag_ in ['name']) and (event_ == 'start')):
                     try:
-                        __identifier.parseString(operand.text)[0]
+                        macro_name = __identifier.parseString(operand.text)[0]
                     except pypa.ParseException:
                         print('ERROR (parse): cannot parse cond_str (%s) -- (%s)' %
                             (cond_str, src_line))
-            if (tag in __conditionals):
-                cond_node = CondNode()
+                    else:
+                        arch_name = findMacroNameInDb(macro_name, db)
+                        if arch_name:
+                            arch_names.add(arch_name)
+
+            if (tag in __conditionals): # #if #ifdef #ifndef
+                cond_node = CondNode(src_line)
                 node_stack[-1].add_child(cond_node)
                 cpp_node = CppNode(tag, cond_str, src_line)
                 cond_node.add_child(cpp_node)
                 node_stack.append(cpp_node)
-            elif ((tag in __conditionals_else)
-                    or (tag in __conditionals_elif)):
+            else: # #elif #else
                 cond_node = node_stack[-1].parent
                 cpp_node = CppNode(tag, cond_str, src_line)
                 cond_node.add_child(cpp_node)
-                node_stack.pop()
+                node_stack.pop().endLoc=src_line-1
                 node_stack.append(cpp_node)
+
+            if arch_names:
+                __line_and_arch[cpp_node] = arch_names
 
         if ((tag in __macro_define) and (event == 'end') and (ns == __cppnscpp)):
             pass
@@ -174,7 +163,9 @@ def buildCppTree(root):
         if ((tag in __conditionals_endif) and (event == "start") and (ns == __cppnscpp)):
             if (len(node_stack)==1):
                 raise IfdefEndifMismatchError(src_line)
-            node_stack.pop().parent.endifLoc = src_line
+            lastCppNode = node_stack.pop()
+            lastCppNode.endLoc = src_line-1
+            lastCppNode.parent.endLoc = src_line
 
     if (len(node_stack)!=1):
         raise IfdefEndifMismatchError(-1)
@@ -182,7 +173,7 @@ def buildCppTree(root):
     return 
 
 
-def analysisPass(folder, options, first):
+def analysisPass(folder, db, first):
     global __old_tree_root, __new_tree_root
     resetModule()
 
@@ -194,6 +185,7 @@ def analysisPass(folder, options, first):
     files = returnFileNames(folder, ['.xml'])
     files.sort()
     ftotal = len(files)
+    json_result = {}
 
     for file in files:
         __curfile = file
@@ -210,31 +202,25 @@ def analysisPass(folder, options, first):
 
         root = tree.getroot()
         try:
-            buildCppTree(root)
+            buildCppTree(root, db)
         except IfdefEndifMismatchError as e:
             print("ERROR: ifdef-endif mismatch in file (%s:%s msg: %s)" % (os.path.join(folder, file), e.loc, e.msg))
             continue
         
         print(__defsetf[__curfile])
-        print(__cpp_root)
 
-        # collect arch info
-        if first:
-            __old_tree_root = __cpp_root
+        json_data = {}
 
-        else:
-            __new_tree_root = __cpp_root
+        for node in __line_and_arch.keys():
+            json_data[node.loc] = dict()
+            json_data[node.loc][node.endLoc] = list(__line_and_arch[node])
+        # print(__cpp_root)
 
-        #adjust file name if wanted
-        if options.filenamesRelative : # relative file name (root is project folder (not included in path))
-            file = os.path.relpath(file, folder)
+        file = os.path.relpath(file, folder)
+        file, ext = os.path.splitext(file)
+        json_result[file] = json_data
 
-        if options.filenames == options.FILENAME_SRCML : # ArchReviewer file names
-            pass # nothing to do here, as the file path is the ArchReviewer path by default
-        if options.filenames == options.FILENAME_SOURCE : # source file name
-            file = file.replace(".xml", "").replace("/_ArchReviewer/", "/source/", 1)
-
-
+    json.dump(json_result, fd, indent=2)
     fd.close()
 
 def resetModule() :
@@ -243,8 +229,8 @@ def resetModule() :
     __defsetf = dict()      # macro-objects per file
 
 
-def apply(folder, options):
-    analysisPass(folder, options, True)
+def apply(folder, db):
+    analysisPass(folder, db, True)
 
 def addCommandLineOptionsMain(optionparser):
     ''' add command line options for a direct call of this script'''

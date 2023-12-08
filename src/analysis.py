@@ -4,7 +4,7 @@ import shutil  # for copying files and folders
 from abc import ABCMeta, abstractmethod  # abstract classes
 from argparse import ArgumentParser, RawTextHelpFormatter  # for parameters to this script
 from collections import OrderedDict  # for ordered dictionaries
-
+import json
 import archInfo
 
 
@@ -18,6 +18,8 @@ class AbstractAnalysisThread(object):
     def __init__(self, options, inputfolder=None, inputfile=None):
         self.options = options
         self.notrunnable = False
+        with open('tools/arch_info.json', 'r') as f:
+            self.arch_info_db = json.load(f)
 
         if (inputfolder):
             self.file = None
@@ -126,7 +128,7 @@ class ArchInfoAnalysisThread(AbstractAnalysisThread):
         archInfo.addCommandLineOptions(group)
 
     def analyze(self, folder):
-        archInfo.apply(folder, self.options)
+        archInfo.apply(folder, self.arch_info_db)
 
 
 # #################################################
