@@ -23,7 +23,7 @@ System:
     sudo apt-get install xsltproc
     sudo apt-get install libxml2 libxml2-dev
     sudo apt-get install gcc
-    sudo apt-get install python2-dev libxml2-dev libxslt-dev zlib1g-dev
+    sudo apt-get install python2-dev libxml2-dev libxslt-dev zlib1g-dev python-setuptools
     ```
 
     install srcml from https://www.srcml.org/#download
