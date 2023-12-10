@@ -91,7 +91,7 @@ def getOptions(kinds, step=steps.ALL):
 
     # no backup files
     if step == steps.ALL or step == steps.PREPARATION:
-        parser.add_argument("--nobak", action="store_true", dest="nobak", default=False,
+        parser.add_argument("--nobak", action="store_true", dest="nobak", default=True,
                             help="do not backup files during preparation [default: %(default)s]")
 
 

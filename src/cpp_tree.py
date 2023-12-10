@@ -44,7 +44,7 @@ class CppNode(Node):
         self.tag = tag
     
     def __str__(self):
-        ret = self.tag + ":" + str(self.loc) + self.cond
+        ret = self.tag + ":" + str(self.loc) + "~" + str(self.endLoc)
         ret = ret + ' '
         if len(self.children) == 0:
             return ret

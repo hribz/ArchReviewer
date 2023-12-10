@@ -128,9 +128,10 @@ def buildCppTree(root, db):
         if ((tag in __conditionals_all) and (event == 'start') and (ns == __cppnscpp)):
             cond_str = __getCondStr(elem)
             arch_names = set()
+            # print(elem)
             for event_, operand in etree.iterwalk(elem, events=("start", "end")):
                 ns_, tag_ = __cpprens.match(operand.tag).groups()
-                if ((tag_ in ['name']) and (event_ == 'start')):
+                if ((tag_ in ['name']) and len(operand)==0 and (event_ == 'start')):
                     try:
                         macro_name = __identifier.parseString(operand.text)[0]
                     except pypa.ParseException:
@@ -162,7 +163,8 @@ def buildCppTree(root, db):
 
         if ((tag in __conditionals_endif) and (event == "start") and (ns == __cppnscpp)):
             if (len(node_stack)==1):
-                raise IfdefEndifMismatchError(src_line)
+                print(__cpp_root)
+                raise IfdefEndifMismatchError(src_line, '#endif not match')
             lastCppNode = node_stack.pop()
             lastCppNode.endLoc = src_line-1
             lastCppNode.parent.endLoc = src_line
@@ -207,18 +209,19 @@ def analysisPass(folder, db, first):
             print("ERROR: ifdef-endif mismatch in file (%s:%s msg: %s)" % (os.path.join(folder, file), e.loc, e.msg))
             continue
         
-        print(__defsetf[__curfile])
+        # print(__defsetf[__curfile])
 
-        json_data = {}
+        if __line_and_arch:
+            json_data = {}
+            
+            for node in __line_and_arch.keys():
+                json_data[node.loc] = dict()
+                json_data[node.loc][node.endLoc] = list(__line_and_arch[node])
+            # print(__cpp_root)
 
-        for node in __line_and_arch.keys():
-            json_data[node.loc] = dict()
-            json_data[node.loc][node.endLoc] = list(__line_and_arch[node])
-        # print(__cpp_root)
-
-        file = os.path.relpath(file, folder)
-        file, ext = os.path.splitext(file)
-        json_result[file] = json_data
+            file = os.path.relpath(file, folder)
+            file, ext = os.path.splitext(file)
+            json_result[file] = json_data
 
     json.dump(json_result, fd, indent=2)
     fd.close()
