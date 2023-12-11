@@ -45,13 +45,13 @@ System:
     sudo python setup.py install
     ```
 
-4. supply work folder path in 'input.txt', for example:
+4. create file 'input.txt' in this directory, supply work folder path in 'input.txt', for example:
 
     ```
     /path/to/ArchReviewer/test
     ```
     
-    and the source code to analysis should be stored at path '/path/to/ArchReviewer/test/source'
+    and the source code to analysis should be stored at directory '/path/to/ArchReviewer/test/source'
 
 5. run command
 
