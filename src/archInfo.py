@@ -215,8 +215,7 @@ def analysisPass(folder, db, first):
             json_data = {}
             
             for node in __line_and_arch.keys():
-                json_data[node.loc] = dict()
-                json_data[node.loc][node.endLoc] = list(__line_and_arch[node])
+                json_data[str(node.loc) + ',' + str(node.endLoc)] = list(__line_and_arch[node])
             # print(__cpp_root)
 
             file = os.path.relpath(file, folder)
