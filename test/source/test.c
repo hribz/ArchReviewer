@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <mmintrin.h>
+#include <immintrin.h>
 
 // test.c
 /* this is 

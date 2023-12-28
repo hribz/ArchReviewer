@@ -30,6 +30,7 @@ __conditionals_all = __conditionals + __conditionals_elif + \
         __conditionals_else
 __macro_define = ['define']
 __function_call = ['call']
+__include_file = ['include']
 __curfile = ''          # current processed xml-file
 __defset = set()        # macro-objects
 __defsetf = dict()      # macro-objects per file
@@ -122,10 +123,18 @@ def findIntrinsicsInDb(intrinsics, db):
                 return str(arch_name)
     return None
 
+def findIncludeNameInDb(include, db):
+    for arch_name, arch_dict in db.items():
+        if 'include_file_name' in arch_dict:
+            if include in arch_dict.get('include_file_name'):
+                return str(arch_name)
+    return None
+
 def buildCppTree(root, db):
-    global __cpp_root, __line_and_arch, __line_and_intrinsics
+    global __cpp_root, __line_and_arch, __line_and_intrinsics, __line_and_include
     __line_and_arch = dict()
     __line_and_intrinsics = dict()
+    __line_and_include = dict()
     __cpp_root = CppNode('root', '', -1)
     __cpp_root.endLoc = 0
     node_stack = [__cpp_root]
@@ -189,6 +198,18 @@ def buildCppTree(root, db):
                         __line_and_intrinsics[src_line].append(intrinsics)
                     break
 
+        if ((tag in __include_file) and (event == 'start') and (ns == __cppnscpp)):
+            for event_, operand in etree.iterwalk(elem, events=("start", "end")):
+                ns_, tag_ = __cpprens.match(operand.tag).groups()
+                if ((tag_ in ['file']) and len(operand)==0 and (event_ == 'start')):
+                    # print(operand.text[1:-1])
+                    include = findIncludeNameInDb(operand.text[1:-1], db)
+                    if include:
+                        if not __line_and_include.has_key(src_line):
+                            __line_and_include[src_line] = list()
+                        __line_and_include[src_line].append(include)
+                    break
+
     if (len(node_stack)!=1):
         raise IfdefEndifMismatchError(-1)
     __cpp_root.verify()
@@ -232,6 +253,15 @@ def analysisPass(folder, db, first):
         # print(__defsetf[__curfile])
 
         json_data = {}
+        
+        if __line_and_include:
+            # print(__line_and_intrinsics)
+            for line in __line_and_include.keys():
+                if not json_data.has_key(str(line) + ',' + str(line+1)):
+                    json_data[str(line) + ',' + str(line)] = list(__line_and_include[line])
+                else:
+                    json_data[str(line) + ',' + str(line)].extend(__line_and_include[line])
+
         if __line_and_arch:
             for node in __line_and_arch.keys():
                 json_data[str(node.loc) + ',' + str(node.endLoc)] = list(__line_and_arch[node])
@@ -245,9 +275,9 @@ def analysisPass(folder, db, first):
             # print(__line_and_intrinsics)
             for line in __line_and_intrinsics.keys():
                 if not json_data.has_key(str(line) + ',' + str(line+1)):
-                    json_data[str(line) + ',' + str(line+1)] = list(__line_and_intrinsics[line])
+                    json_data[str(line) + ',' + str(line)] = list(__line_and_intrinsics[line])
                 else:
-                    json_data[str(line) + ',' + str(line+1)].extend(__line_and_intrinsics[line])
+                    json_data[str(line) + ',' + str(line)].extend(__line_and_intrinsics[line])
 
     json.dump(json_result, fd, indent=2)
     fd.close()
