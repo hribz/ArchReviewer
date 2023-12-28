@@ -1,27 +1,163 @@
 {
-	"x86_64": { 
-		"include_file_name": ["immintrin.h"],
-		"macro_names": ["__x86_64__", "__amd64__","__amd64","__x86_64","_M_AMD64"],
-		"intrinsics": [""]
-	},
-	"arm": {
-		"include_file_name":[""],
-		"macro_names":["__arm__","__thumb__","__ARM_ARCH_","__TARGET_ARCH_ARM","__TARGET_ARCH_THUMB"],
-		"intrinsics":[""]
-	},
-	"aarch64": {
-		"include_file_name":[""],
-		"macro_names":["__aarch64__"],
-		"intrinsics":[""]
-	},
-	"mips":{
-		"include_file_name":[""],
-		"macro_names":["__mips__","mips","_MIPS_ISA","_MIPS_ISA_MIPS","_R3000","_R4000","_R5900","__mips","__MIPS"],
-		"intrinsics":[]
-	},
-	"x86":{
-		"include_file_name":[],
-		"macro_names":["i386","__i386","__i386__","__i486__","__i586__","__i686__","__IA32__","__X86__","_X86_"],
-		"intrinsics":[""]
-	}
+  "aarch64": {
+    "include_file_name": [
+      ""
+    ], 
+    "macro_names": [
+      "__aarch64__"
+    ], 
+    "intrinsics": [
+      ""
+    ]
+  }, 
+  "x86_64": {
+    "include_file_name": [
+      "immintrin.h"
+    ], 
+    "macro_names": [
+      "__x86_64__", 
+      "__amd64__", 
+      "__amd64", 
+      "__x86_64", 
+      "_M_AMD64"
+    ], 
+    "intrinsics": [
+      ""
+    ]
+  }, 
+  "mips": {
+    "include_file_name": [
+      ""
+    ], 
+    "macro_names": [
+      "__mips__", 
+      "mips", 
+      "_MIPS_ISA", 
+      "_MIPS_ISA_MIPS", 
+      "_R3000", 
+      "_R4000", 
+      "_R5900", 
+      "__mips", 
+      "__MIPS"
+    ], 
+    "intrinsics": []
+  }, 
+  "x86": {
+    "include_file_name": [], 
+    "macro_names": [
+      "i386", 
+      "__i386", 
+      "__i386__", 
+      "__i486__", 
+      "__i586__", 
+      "__i686__", 
+      "__IA32__", 
+      "__X86__", 
+      "_X86_"
+    ], 
+    "intrinsics": [
+      "_mm_add_pi16", 
+      "_mm_add_pi32", 
+      "_mm_add_pi8", 
+      "_mm_adds_pi16", 
+      "_mm_adds_pi8", 
+      "_mm_adds_pu16", 
+      "_mm_adds_pu8", 
+      "_mm_and_si64", 
+      "_mm_andnot_si64", 
+      "_mm_cmpeq_pi16", 
+      "_mm_cmpeq_pi32", 
+      "_mm_cmpeq_pi8", 
+      "_mm_cmpgt_pi16", 
+      "_mm_cmpgt_pi32", 
+      "_mm_cmpgt_pi8", 
+      "_mm_cvtm64_si64", 
+      "_mm_cvtsi32_si64", 
+      "_mm_cvtsi64_m64", 
+      "_mm_cvtsi64_si32", 
+      "_m_empty", 
+      "_mm_empty", 
+      "_m_from_int", 
+      "_m_from_int64", 
+      "_mm_madd_pi16", 
+      "_mm_mulhi_pi16", 
+      "_mm_mullo_pi16", 
+      "_mm_or_si64", 
+      "_mm_packs_pi16", 
+      "_mm_packs_pi32", 
+      "_mm_packs_pu16", 
+      "_m_packssdw", 
+      "_m_packsswb", 
+      "_m_packuswb", 
+      "_m_paddb", 
+      "_m_paddd", 
+      "_m_paddsb", 
+      "_m_paddsw", 
+      "_m_paddusb", 
+      "_m_paddusw", 
+      "_m_paddw", 
+      "_m_pand", 
+      "_m_pandn", 
+      "_m_pcmpeqb", 
+      "_m_pcmpeqd", 
+      "_m_pcmpeqw", 
+      "_m_pcmpgtb", 
+      "_m_pcmpgtd", 
+      "_m_pcmpgtw", 
+      "_m_pmaddwd", 
+      "_m_pmulhw", 
+      "_m_pmullw", 
+      "_m_por", 
+      "_m_pslld", 
+      "_m_pslldi", 
+      "_m_psllq", 
+      "_m_psllqi", 
+      "_m_psllw", 
+      "_m_psllwi", 
+      "_m_psrad", 
+      "_m_psradi", 
+      "_m_psraw", 
+      "_m_psrawi", 
+      "_m_psrld", 
+      "_m_psrldi", 
+      "_m_psrlq", 
+      "_m_psrlqi", 
+      "_m_psrlw", 
+      "_m_psrlwi", 
+      "_m_psubb", 
+      "_m_psubd", 
+      "_m_psubsb", 
+      "_m_psubsw", 
+      "_m_psubusb", 
+      "_m_psubusw", 
+      "_m_psubw", 
+      "_m_punpckhbw", 
+      "_m_punpckhdq", 
+      "_m_punpckhwd", 
+      "_m_punpcklbw", 
+      "_m_punpckldq", 
+      "_m_punpcklwd", 
+      "_m_pxor", 
+      "_mm_set_pi16", 
+      "_mm_set_pi32", 
+      "_mm_set_pi8", 
+      "_mm_set1_pi16", 
+      "_mm_set1_pi32"
+    ]
+  }, 
+  "arm": {
+    "include_file_name": [
+      ""
+    ], 
+    "macro_names": [
+      "__arm__", 
+      "__thumb__", 
+      "__ARM_ARCH_", 
+      "__TARGET_ARCH_ARM", 
+      "__TARGET_ARCH_THUMB"
+    ], 
+    "intrinsics": [
+      ""
+    ]
+  }
 }

@@ -1,0 +1,27 @@
+{
+	"x86_64": { 
+		"include_file_name": ["immintrin.h"],
+		"macro_names": ["__x86_64__", "__amd64__","__amd64","__x86_64","_M_AMD64"],
+		"intrinsics": [""]
+	},
+	"arm": {
+		"include_file_name":[""],
+		"macro_names":["__arm__","__thumb__","__ARM_ARCH_","__TARGET_ARCH_ARM","__TARGET_ARCH_THUMB"],
+		"intrinsics":[""]
+	},
+	"aarch64": {
+		"include_file_name":[""],
+		"macro_names":["__aarch64__"],
+		"intrinsics":[""]
+	},
+	"mips":{
+		"include_file_name":[""],
+		"macro_names":["__mips__","mips","_MIPS_ISA","_MIPS_ISA_MIPS","_R3000","_R4000","_R5900","__mips","__MIPS"],
+		"intrinsics":[]
+	},
+	"x86":{
+		"include_file_name":[],
+		"macro_names":["i386","__i386","__i386__","__i486__","__i586__","__i686__","__IA32__","__X86__","_X86_"],
+		"intrinsics":[""]
+	}
+}
