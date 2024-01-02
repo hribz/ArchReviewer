@@ -49,3 +49,18 @@ class CppNode(Node):
         if len(self.children) == 0:
             return ret
         return ret + super(CppNode, self).__str__()
+
+# add new macro non exist in previous commit
+TYPE_ADD = 0
+# delete marco in previous commit
+TYPE_DELETE = 1
+# modify content in previous macro
+TYPE_MODIFY = 2
+
+class DiffNode(object):
+    # in delete new_node is none
+    # in add old_node is none
+    def __init__(self,diff_type,old_node,new_node):
+        self.diff_type = diff_type
+        self.old_node = old_node
+        self.new_node = new_node

@@ -6,4 +6,4 @@ ArchReviewer.egg-info
 dist
 input.txt
 real-project
-.vscode/
+.vscode/*
