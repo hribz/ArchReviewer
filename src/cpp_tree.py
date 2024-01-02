@@ -30,16 +30,17 @@ class CondNode(Node):
         self.loc = loc
 
     def __str__(self):
-        ret = '{'
+        ret = '{\n'
         for child in self.children:
-            ret = ret+child.__str__()
+            ret = ret+child.__str__()+'\n'
         ret = ret + '}'
         return ret
     
 class CppNode(Node):
-    def __init__(self, tag, cond, loc):
+    def __init__(self, tag, cond,loc):
         super(CppNode, self).__init__()
         self.cond = cond
+        self.content = ''
         self.loc = loc
         self.tag = tag
     
@@ -49,6 +50,9 @@ class CppNode(Node):
         if len(self.children) == 0:
             return ret
         return ret + super(CppNode, self).__str__()
+    
+    def add_content(self,content):
+        self.content = content
 
 # add new macro non exist in previous commit
 TYPE_ADD = 0
