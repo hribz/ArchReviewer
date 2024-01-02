@@ -10,6 +10,8 @@ pypa.ParserElement.enablePackrat() # speed up parsing
 sys.setrecursionlimit(8000)        # handle larger expressions
 from cpp_tree import *
 import json
+import difflib
+import copy
 
 ##################################################
 # config:
@@ -130,15 +132,27 @@ def findIncludeNameInDb(include, db):
                 return str(arch_name)
     return None
 
-def buildCppTree(root, db):
-    global __cpp_root, __line_and_arch, __line_and_intrinsics, __line_and_include
+def write_content(lines,cppnode):
+    if isinstance(cppnode,CppNode) and cppnode.loc > 0 and cppnode.endLoc > 0:
+        content = ''
+        if cppnode.loc == cppnode.endLoc:
+            content = lines[cppnode.loc-1]
+        else:#multi line
+            for i in range(cppnode.loc,cppnode.endLoc+1):
+                content += lines[i-1]
+        cppnode.add_content(content)
+
+def buildCppTree(source,root, db):
+    global  __line_and_arch, __line_and_intrinsics, __line_and_include
     __line_and_arch = dict()
     __line_and_intrinsics = dict()
     __line_and_include = dict()
     __cpp_root = CppNode('root', '', -1)
     __cpp_root.endLoc = 0
     node_stack = [__cpp_root]
-
+    source_file = open(source.replace('.xml',''),'r')
+    lines = source_file.readlines()
+    
     for event, elem in etree.iterwalk(root, events=("start", "end")):
         ns, tag = __cpprens.match(elem.tag).groups()
         src_line = elem.sourceline-1
@@ -170,7 +184,9 @@ def buildCppTree(root, db):
                 cond_node = node_stack[-1].parent
                 cpp_node = CppNode(tag, cond_str, src_line)
                 cond_node.add_child(cpp_node)
-                node_stack.pop().endLoc=src_line-1
+                node = node_stack.pop()
+                node.endLoc=src_line-1
+                write_content(lines,node)
                 node_stack.append(cpp_node)
 
             if arch_names:
@@ -185,7 +201,9 @@ def buildCppTree(root, db):
                 raise IfdefEndifMismatchError(src_line, '#endif not match')
             lastCppNode = node_stack.pop()
             lastCppNode.endLoc = src_line-1
+            write_content(lines,lastCppNode)
             lastCppNode.parent.endLoc = src_line
+            write_content(lines,lastCppNode.parent)
 
         if ((tag in __function_call) and (event == 'start') and (ns == __cppnsdef)):
             for event_, operand in etree.iterwalk(elem, events=("start", "end")):
@@ -213,7 +231,7 @@ def buildCppTree(root, db):
     if (len(node_stack)!=1):
         raise IfdefEndifMismatchError(-1)
     __cpp_root.verify()
-    return 
+    return copy.deepcopy(__cpp_root)
 
 
 def analysisPass(folder, db, first):
@@ -245,7 +263,7 @@ def analysisPass(folder, db, first):
 
         root = tree.getroot()
         try:
-            buildCppTree(root, db)
+            buildCppTree(file,root, db)
         except IfdefEndifMismatchError as e:
             print("ERROR: ifdef-endif mismatch in file (%s:%s msg: %s)" % (os.path.join(folder, file), e.loc, e.msg))
             continue
@@ -281,6 +299,89 @@ def analysisPass(folder, db, first):
 
     json.dump(json_result, fd, indent=2)
     fd.close()
+
+def dfs(current_node,macro_dict,macro_list):
+    for child_node in current_node.children:
+        if child_node.endLoc != -1:
+            key = str(child_node.loc) + '~' + str(child_node.endLoc)
+            macro_dict[key] = child_node
+            macro_list.append((child_node.loc,child_node.endLoc))
+        dfs(child_node,macro_dict,macro_list)
+
+def generate_dict(root):
+    macro_dict = dict()
+    line_range_list = list()
+    if root.endLoc != -1:
+        key = str(root.loc)+'~'+str(root.endLoc)
+        macro_dict[key] = root
+        line_range_list.append((root.loc,root.endLoc))
+    dfs(root,macro_dict,line_range_list)
+    return macro_dict,line_range_list
+
+def node_contain(macro_list,macro_dict,index):
+    for start,end in macro_list:
+        if index >= start and index <= end:
+            key = str(start)+'~'+str(end)
+            node = macro_dict[key]
+            if len(node.children)!=0:
+                continue
+            else:
+                return True,macro_dict[key]
+    return False,None
+        
+# only analias one file in different commit
+def diffAnalias(old_commit_dir,new_commit_dir,filename,db):
+    resetModule()
+    
+    old_path = os.path.join(old_commit_dir,filename)
+    new_path = os.path.join(new_commit_dir,filename)
+    
+    try:
+        old_tree = etree.parse(old_path)
+    except etree.XMLSyntaxError:
+        print("ERROR: cannot parse (%s). Skipping this file." % old_path)
+
+    try:
+        new_tree = etree.parse(new_path)
+    except etree.XMLSyntaxAssertionError:
+        print("ERROR: cannot parse (%s). Skipping this file." % old_path)
+    
+    old_root = old_tree.getroot()
+    new_root = new_tree.getroot()
+    
+    try:
+        old_cpp = buildCppTree(old_path,old_root,db)
+    except IfdefEndifMismatchError as e:
+        print("ERROR: ifdef-endif mismatch in file (%s:%s msg: %s)" % (old_path, e.loc, e.msg))
+    try:
+        new_cpp = buildCppTree(new_path, new_root,db)
+    except IfdefEndifMismatchError as e:
+        print("ERROR: ifdef-endif mismatch in file (%s:%s msg: %s)" % (new_path, e.loc, e.msg))
+    
+    diff_list = []
+    # old_macro_dict = generate_dict(old_cpp)
+    new_macro_dict,new_macro_list = generate_dict(new_cpp)
+    
+    old_lines = open(old_path.replace(".xml",""),'r').readlines()
+    new_lines = open(new_path.replace(".xml",""),'r').readlines()
+    diff = difflib.unified_diff(old_lines,new_lines)
+    
+    for line in diff:
+        if line[:2] in ["@@","--","++"]:
+            continue
+        if line[0] == '-':# left only
+            row_line = line[1:]
+            file_line = old_lines.index(row_line)
+            
+        elif line[0] == '+':# new commit only
+            row_line = line[1:]
+            file_line = new_lines.index(row_line)+1
+            flag,node = node_contain(new_macro_list,new_macro_dict,file_line)
+            if flag:
+                diff_list.append(node)
+    
+    
+    return diff_list
 
 def resetModule() :
     global __defset, __defsetf
