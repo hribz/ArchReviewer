@@ -20,6 +20,8 @@ class AbstractAnalysisThread(object):
         self.notrunnable = False
         with open('../tools/arch_info.json', 'r') as f:
             self.arch_info_db = json.load(f)
+        with open('../tools/diff.json', 'r') as f:
+            self.diff_db = json.load(f)
 
         if (inputfolder):
             self.file = None
@@ -75,7 +77,7 @@ class AbstractAnalysisThread(object):
             shutil.copyfile(self.file, currentFile)
 
         # for all files in the self.folder (only C and H files)
-        self.analyze(self.folder)
+        self.analyze(self.new_commit_folder)
 
         # copy main results file from tmp folder to destination, if given
         if (self.file and self.resultsfile != self.outfile):
@@ -128,7 +130,7 @@ class ArchInfoAnalysisThread(AbstractAnalysisThread):
         archInfo.addCommandLineOptions(group)
 
     def analyze(self, folder):
-        archInfo.apply(folder, self.arch_info_db)
+        archInfo.apply(folder, self.arch_info_db, self.diff_db)
 
 
 # #################################################

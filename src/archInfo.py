@@ -16,6 +16,7 @@ import copy
 ##################################################
 # config:
 __outputfile = "arch_info_result.json"
+__backendfile = "result_for_backend.json"
 
 # constants:
 # namespace-constant for src2srcml
@@ -33,6 +34,7 @@ __conditionals_all = __conditionals + __conditionals_elif + \
 __macro_define = ['define']
 __function_call = ['call']
 __include_file = ['include']
+__comment = ['comment']
 __curfile = ''          # current processed xml-file
 __defset = set()        # macro-objects
 __defsetf = dict()      # macro-objects per file
@@ -233,8 +235,36 @@ def buildCppTree(source,root, db):
     __cpp_root.verify()
     return copy.deepcopy(__cpp_root)
 
+def __line_has_change(line_b, line_e, diff_lines):
+    '''
+    return: [line_b, line_e] ∩ diff_lines
+    diff_lines format: [[line1], [line2,line3], ...]
+    '''
+    ret = []
+    flag = False
+    for integers in diff_lines:
+        if len(integers)==1:
+            lb = le = integers[0]
+        elif len(integers)==2:
+            lb = integers[0]
+            le = integers[1]
+        else:
+            print(f'diff lines error {diff_lines}')
+            continue
 
-def analysisPass(folder, db, first):
+        if le<line_b:
+            continue
+        if lb>line_e:
+            break
+        lb = max(line_b, integers[0])
+        le = min(line_e, integers[1])
+        if (lb==le):
+            ret.append(str(lb))
+        else:
+            ret.append(str(lb)+'-'+str(le))
+    return flag, ret
+
+def analysisPass(folder, db, git_diff):
     global __old_tree_root, __new_tree_root
     resetModule()
 
@@ -247,6 +277,8 @@ def analysisPass(folder, db, first):
     files.sort()
     ftotal = len(files)
     json_result = {}
+    result_to_backend = {}
+    result_arch = set()
 
     for file in files:
         __curfile = file
@@ -270,34 +302,61 @@ def analysisPass(folder, db, first):
         
         # print(__defsetf[__curfile])
 
+        file = os.path.relpath(file, folder)
+        file, ext = os.path.splitext(file)
         json_data = {}
+        arch_line = []
         
-        if __line_and_include:
-            # print(__line_and_intrinsics)
-            for line in __line_and_include.keys():
-                if not json_data.has_key(str(line) + ',' + str(line+1)):
-                    json_data[str(line) + ',' + str(line)] = list(__line_and_include[line])
-                else:
-                    json_data[str(line) + ',' + str(line)].extend(__line_and_include[line])
-
         if __line_and_arch:
             for node in __line_and_arch.keys():
                 json_data[str(node.loc) + ',' + str(node.endLoc)] = list(__line_and_arch[node])
-            # print(__cpp_root)
 
-            file = os.path.relpath(file, folder)
-            file, ext = os.path.splitext(file)
-            json_result[file] = json_data
+                flag, diff_line = __line_has_change(node.loc, node.endLoc, git_diff[file])
+                if flag:
+                    result_arch = result_arch.union(__line_and_arch[node])
+                    arch_line.extend(diff_line)
+            # print(__cpp_root)
+                
+        if __line_and_include:
+            # print(__line_and_intrinsics)
+            for line in __line_and_include.keys():
+                if not json_data.has_key(str(line) + ',' + str(line)):
+                    json_data[str(line) + ',' + str(line)] = list(__line_and_include[line])
+                else:
+                    json_data[str(line) + ',' + str(line)].extend(__line_and_include[line])
+                
+                flag, diff_line = __line_has_change(line, line, git_diff[file])
+                if flag:
+                    result_arch = result_arch.union(__line_and_include[line])
+                    arch_line.extend(diff_line)
 
         if __line_and_intrinsics:
             # print(__line_and_intrinsics)
             for line in __line_and_intrinsics.keys():
-                if not json_data.has_key(str(line) + ',' + str(line+1)):
+                if not json_data.has_key(str(line) + ',' + str(line)):
                     json_data[str(line) + ',' + str(line)] = list(__line_and_intrinsics[line])
                 else:
                     json_data[str(line) + ',' + str(line)].extend(__line_and_intrinsics[line])
 
+                flag, diff_line = __line_has_change(line, line, git_diff[file])
+                if flag:
+                    result_arch = result_arch.union(__line_and_include[line])
+                    arch_line.extend(diff_line)
+
+        if json_data:
+            json_result[file] = json_data
+        
+        if arch_line:
+            result_to_backend['detail'][file] = arch_line
+
     json.dump(json_result, fd, indent=2)
+        
+    if result_arch:
+        result_to_backend['result'] = result_arch
+    parent_directory = os.path.abspath(os.path.join(folder, os.pardir))
+    with open(os.path.join(parent_directory, __backendfile), 'w') as f:
+        json.dump(result_to_backend, f, indent=2)
+        
     fd.close()
 
 def dfs(current_node,macro_dict,macro_list):
@@ -389,8 +448,8 @@ def resetModule() :
     __defsetf = dict()      # macro-objects per file
 
 
-def apply(folder, db):
-    analysisPass(folder, db, True)
+def apply(folder, db, git_diff):
+    analysisPass(folder, db, git_diff)
 
 def addCommandLineOptionsMain(optionparser):
     ''' add command line options for a direct call of this script'''

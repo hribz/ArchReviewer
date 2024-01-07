@@ -4,6 +4,7 @@ import os
 import threading
 import time
 from typing import Optional, List
+import re
 
 from flask import Flask, request, abort
 from nacos_py import NacosService, NacosClient
@@ -135,6 +136,8 @@ def inference():
     new_commit_floder = os.path.join(source_floder, 'new_commit')
     os.makedirs(old_commit_floder)
     os.makedirs(new_commit_floder)
+    result_json = []
+    result_file_path = 'git-repo/_ArchReviewer/result_for_backend.json'
 
     for commit in commits:
         params = {'repo_id': commit.get('repo_id'), 'commit_hash': commit.get(hash)}
@@ -145,28 +148,43 @@ def inference():
             print(f"请求失败，状态码: {response.status_code}, msg: {json_data.get('msg', 'No message found')}")
         else:
             file_list = json_data.get('payload', [])
+            diff_json = []
             for file in file_list:
                 if not file.get('binary'):
                     with open(os.path.join(old_commit_floder, file.get('path')), 'w') as f:
                         f.write(file.get('content_old'))
                     with open(os.path.join(new_commit_floder, file.get('path')), 'w') as f:
                         f.write(file.get('content_new'))
-    
-        subprocess.call(['ArchReviewer', '--kind=archinfo', '--list=git_repo.txt'])
+                    diff_content = file.get('diff')
+                    matches = re.findall(r'\+(\d+(?:,\d+)?)', diff_content)
+                    result_by_line = []
+                    current_line = []
 
-        result_file_path = 'git-repo/_ArchReviewer/arch_info_result.json'
-        if os.path.exists(result_file_path):
-            with open(result_file_path, 'r') as file:
-                try:
-                    json_data = json.load(file)
-                    return json_data
-                except json.JSONDecodeError as e:
-                    print(f"Error decoding JSON: {e}")
-                    abort(500)
-        else:
-            print(f"File not found: {result_file_path}")
-            abort(500)
+                    for match in matches:
+                        if ',' in match:
+                            current_line.extend(map(int, match.split(',')))
+                        else:
+                            current_line.append(int(match))
+                        result_by_line.append(current_line)
+                        current_line = []
+                    diff_json.append({file.get('path'): result_by_line})
+            with open('tools/diff.json', 'w') as f:
+                f.write(diff_json)
 
+            subprocess.call(['ArchReviewer', '--kind=archinfo', '--list=git_repo.txt'])
+
+            if os.path.exists(result_file_path):
+                with open(result_file_path, 'r') as file:
+                    try:
+                        json_data = json.load(file)
+                        result_json.append(json_data)
+                    except json.JSONDecodeError as e:
+                        print(f"Error decoding JSON: {e}")
+                        # abort(500)
+            else:
+                print(f"File not found: {result_file_path}")
+                # abort(500)
+    return result_json
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

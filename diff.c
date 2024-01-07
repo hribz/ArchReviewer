@@ -15,7 +15,7 @@ int a=0;
 int c0;
 
 #elif defined(__arm__)
-#define arm_defined 2
+#define arm_defined 5
 int c1;
 #elif defined(__aarch64__) || defined(__arm__)
 #define aarch_defined 3
