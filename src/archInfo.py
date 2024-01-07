@@ -145,13 +145,15 @@ def write_content(lines,cppnode):
         cppnode.add_content(content)
 
 def buildCppTree(source,root, db):
-    global  __line_and_arch, __line_and_intrinsics, __line_and_include
+    global  __line_and_arch, __line_and_intrinsics, __line_and_include, __line_and_comment
     __line_and_arch = dict()
     __line_and_intrinsics = dict()
     __line_and_include = dict()
+    __line_and_comment = dict()
     __cpp_root = CppNode('root', '', -1)
     __cpp_root.endLoc = 0
     node_stack = [__cpp_root]
+    comment_stack = []
     source_file = open(source.replace('.xml',''),'r')
     lines = source_file.readlines()
     
@@ -229,6 +231,18 @@ def buildCppTree(source,root, db):
                             __line_and_include[src_line] = list()
                         __line_and_include[src_line].append(include)
                     break
+        
+        if ((tag in __comment)):
+            comment_type = elem.get('type')
+            comment_content = elem.text.strip()
+            if comment_type == 'line':
+                __line_and_comment[src_line] = {'type':'line', 'line_e':src_line, 'content': comment_content}
+            elif comment_type == 'block':
+                if event == 'start':
+                    __line_and_comment[src_line] = {'type':'block', 'line_e':src_line, 'content': comment_content}
+                    comment_stack.append(__line_and_comment[src_line])
+                else:
+                    (comment_stack.pop())['line_e']=src_line
 
     if (len(node_stack)!=1):
         raise IfdefEndifMismatchError(-1)
@@ -237,8 +251,9 @@ def buildCppTree(source,root, db):
 
 def __line_has_change(line_b, line_e, diff_lines):
     '''
-    return: [line_b, line_e] ∩ diff_lines
+    [line_b, line_e] ∩ diff_lines
     diff_lines format: [[line1], [line2,line3], ...]
+    return format: True/False, ["line1", "line2-line3] 
     '''
     ret = []
     flag = False
@@ -264,6 +279,10 @@ def __line_has_change(line_b, line_e, diff_lines):
             ret.append(str(lb)+'-'+str(le))
     return flag, ret
 
+def __str2line(input_string):
+    matches = re.findall(r'\d+', input_string)
+    return [int(match) for match in matches]
+
 def analysisPass(folder, db, git_diff):
     global __old_tree_root, __new_tree_root
     resetModule()
@@ -278,6 +297,7 @@ def analysisPass(folder, db, git_diff):
     ftotal = len(files)
     json_result = {}
     result_to_backend = {}
+    result_to_backend['detail'] = {}
     result_arch = set()
 
     for file in files:
@@ -306,6 +326,7 @@ def analysisPass(folder, db, git_diff):
         file, ext = os.path.splitext(file)
         json_data = {}
         arch_line = []
+        comments = {}
         
         if __line_and_arch:
             for node in __line_and_arch.keys():
@@ -342,17 +363,34 @@ def analysisPass(folder, db, git_diff):
                 if flag:
                     result_arch = result_arch.union(__line_and_include[line])
                     arch_line.extend(diff_line)
+        
+        if __line_and_comment:
+            for line in __line_and_comment.keys():
+                comment = __line_and_comment[line]
+                comment_split_by_line = comment['content'].splitlines()
+                flag, diff_line = __line_has_change(line, comment['line_e'], git_diff[file])
+                if flag:
+                    for comment_line in diff_line:
+                        integers = __str2line(comment_line)
+                        if len(integers)==1:
+                            comment_lb = comment_le = integers[0]-line
+                        else:
+                            comment_lb = integers[0]-line
+                            comment_le = integers[1]-line
+                        comments[comment_line] = '\n'.join(comment_split_by_line[comment_lb:comment_le+1])
 
         if json_data:
             json_result[file] = json_data
         
         if arch_line:
-            result_to_backend['detail'][file] = arch_line
+            result_to_backend['detail'][file] = dict()
+            result_to_backend['detail'][file]['arch_line'] = arch_line
+            result_to_backend['detail'][file]['comments'] = comments
 
     json.dump(json_result, fd, indent=2)
         
     if result_arch:
-        result_to_backend['result'] = result_arch
+        result_to_backend['result'] = ','.join(result_arch)
     parent_directory = os.path.abspath(os.path.join(folder, os.pardir))
     with open(os.path.join(parent_directory, __backendfile), 'w') as f:
         json.dump(result_to_backend, f, indent=2)
