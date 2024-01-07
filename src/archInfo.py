@@ -249,14 +249,18 @@ def buildCppTree(source,root, db):
     __cpp_root.verify()
     return copy.deepcopy(__cpp_root)
 
-def __line_has_change(line_b, line_e, diff_lines):
+def __line_has_change(file, line_b, line_e, git_diff):
     '''
-    [line_b, line_e] ∩ diff_lines
+    [line_b, line_e] \wedge diff_lines
     diff_lines format: [[line1], [line2,line3], ...]
     return format: True/False, ["line1", "line2-line3] 
     '''
     ret = []
     flag = False
+    if git_diff.has_key(file):
+        diff_lines = git_diff[file]
+    else:
+        return flag, ret
     for integers in diff_lines:
         if len(integers)==1:
             lb = le = integers[0]
@@ -264,7 +268,7 @@ def __line_has_change(line_b, line_e, diff_lines):
             lb = integers[0]
             le = integers[1]
         else:
-            print(f'diff lines error {diff_lines}')
+            print("diff lines error {%s} {%s}", file, str(diff_lines))
             continue
 
         if le<line_b:
@@ -297,6 +301,7 @@ def analysisPass(folder, db, git_diff):
     ftotal = len(files)
     json_result = {}
     result_to_backend = {}
+    result_to_backend['result'] = {}
     result_to_backend['detail'] = {}
     result_arch = set()
 
@@ -332,7 +337,7 @@ def analysisPass(folder, db, git_diff):
             for node in __line_and_arch.keys():
                 json_data[str(node.loc) + ',' + str(node.endLoc)] = list(__line_and_arch[node])
 
-                flag, diff_line = __line_has_change(node.loc, node.endLoc, git_diff[file])
+                flag, diff_line = __line_has_change(file, node.loc, node.endLoc, git_diff)
                 if flag:
                     result_arch = result_arch.union(__line_and_arch[node])
                     arch_line.extend(diff_line)
@@ -346,7 +351,7 @@ def analysisPass(folder, db, git_diff):
                 else:
                     json_data[str(line) + ',' + str(line)].extend(__line_and_include[line])
                 
-                flag, diff_line = __line_has_change(line, line, git_diff[file])
+                flag, diff_line = __line_has_change(file, line, line, git_diff)
                 if flag:
                     result_arch = result_arch.union(__line_and_include[line])
                     arch_line.extend(diff_line)
@@ -359,7 +364,7 @@ def analysisPass(folder, db, git_diff):
                 else:
                     json_data[str(line) + ',' + str(line)].extend(__line_and_intrinsics[line])
 
-                flag, diff_line = __line_has_change(line, line, git_diff[file])
+                flag, diff_line = __line_has_change(file, line, line, git_diff)
                 if flag:
                     result_arch = result_arch.union(__line_and_include[line])
                     arch_line.extend(diff_line)
@@ -368,7 +373,7 @@ def analysisPass(folder, db, git_diff):
             for line in __line_and_comment.keys():
                 comment = __line_and_comment[line]
                 comment_split_by_line = comment['content'].splitlines()
-                flag, diff_line = __line_has_change(line, comment['line_e'], git_diff[file])
+                flag, diff_line = __line_has_change(file, line, comment['line_e'], git_diff)
                 if flag:
                     for comment_line in diff_line:
                         integers = __str2line(comment_line)
@@ -389,8 +394,7 @@ def analysisPass(folder, db, git_diff):
 
     json.dump(json_result, fd, indent=2)
         
-    if result_arch:
-        result_to_backend['result'] = ','.join(result_arch)
+    result_to_backend['result'] = ','.join(result_arch)
     parent_directory = os.path.abspath(os.path.join(folder, os.pardir))
     with open(os.path.join(parent_directory, __backendfile), 'w') as f:
         json.dump(result_to_backend, f, indent=2)

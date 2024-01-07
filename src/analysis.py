@@ -18,9 +18,9 @@ class AbstractAnalysisThread(object):
     def __init__(self, options, inputfolder=None, inputfile=None):
         self.options = options
         self.notrunnable = False
-        with open('../tools/arch_info.json', 'r') as f:
+        with open('tools/arch_info.json', 'r') as f:
             self.arch_info_db = json.load(f)
-        with open('../tools/diff.json', 'r') as f:
+        with open('tools/diff.json', 'r') as f:
             self.diff_db = json.load(f)
 
         if (inputfolder):

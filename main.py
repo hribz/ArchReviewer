@@ -148,7 +148,7 @@ def inference():
             print(f"请求失败，状态码: {response.status_code}, msg: {json_data.get('msg', 'No message found')}")
         else:
             file_list = json_data.get('payload', [])
-            diff_json = []
+            diff_json = {}
             for file in file_list:
                 if not file.get('binary'):
                     with open(os.path.join(old_commit_floder, file.get('path')), 'w') as f:
@@ -163,11 +163,12 @@ def inference():
                     for match in matches:
                         if ',' in match:
                             current_line.extend(map(int, match.split(',')))
+                            current_line[1] = current_line[0]+current_line[1]
                         else:
                             current_line.append(int(match))
                         result_by_line.append(current_line)
                         current_line = []
-                    diff_json.append({file.get('path'): result_by_line})
+                    diff_json[file.get('path')] = result_by_line
             with open('tools/diff.json', 'w') as f:
                 f.write(diff_json)
 
