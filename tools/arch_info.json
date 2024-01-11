@@ -47,6 +47,34 @@
     ], 
     "intrinsics": []
   }, 
+  "SystemZ": {
+    "include_file_name": [
+    ], 
+    "macro_names": [
+      "__370__", 
+      "__THW_370__", 
+      "__s390__", 
+      "__s390x__", 
+      "__zarch__", 
+      "__SYSC_ZARCH__"
+    ], 
+    "intrinsics": []
+  }, 
+  "PowerPC": {
+    "include_file_name": [
+    ], 
+    "macro_names": [
+      "__powerpc*", 
+      "__POWERPC__", 
+      "__ppc__", 
+      "__ppc64__", 
+      "__PPC__", 
+      "__PPC64__",
+      "_ARCH_PPC",
+      "_ARCH_PPC64"
+    ], 
+    "intrinsics": []
+  },
   "Intel x86": {
     "include_file_name": [
       ".*mmintrin.h"

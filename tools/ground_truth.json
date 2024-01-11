@@ -1,0 +1,260 @@
+[
+    {
+        "repo_name": "crash",
+        "url": "https://github.com/crash-utility/crash.git",
+        "commits":[
+            {
+                "commit_hash": "12c31560000adaaf3539f2bcdffff51ec05df447",
+                "result": "RISC-V",
+                "detail": {
+                    "Makefile": {
+                        "arc_line": ["67", "87", "441-443"]
+                    },
+                    "README": {
+                        "arc_line": ["40-41", "102"]
+                    },
+                    "configure.c": {
+                        "arc_line": ["110", "126", "141", "164-165", "176", "413-415", "469-474"]
+                    },
+                    "defs.h": {
+                        "arc_line": ["79", "121-123", "165-167", "3495-3550", "6783-6861"]
+                    },
+                    "diskdump.c": {
+                        "arc_line": ["625-627", "786-787", "1759-1760", "2567-2568"]
+                    },
+                    "help.c": {
+                        "arc_line": ["9516-9617", "9576-9577"]
+                    },
+                    "lkcd_vmdump_v1.h": {
+                        "arc_line": ["117"]
+                    },
+                    "lkcd_vmdump_v2_v3.h": {
+                        "arc_line": ["40", "87"]
+                    },
+                    "netdump.c": {
+                        "arc_line": ["303-308","2945"]
+                    },
+                    "ramdump.c": {
+                        "arc_line": ["191-192"]
+                    },
+                    "riscv64.c": {
+                        "arc_line": ["1-54"]
+                    },
+                    "symbols.c": {
+                        "arc_line": ["3746-3750", "4010-4014"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "e7119d2225e1db3c460285880ea39b69d362178e",
+                "result": "RISC-V",
+                "detail":{
+                    "defs.h":{
+                        "arc_line":["3499-3577","3629-3636","6924-6927","6951-6956"]
+                    },
+                    "diskdump.c":{
+                        "arc_line":["1534-1539","1619-1622"]
+                    },
+                    "riscv64.c":{
+                        "arc_line":["19-119","124-326","340-931","935-1029","1032-1034"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "b410e14f7865e8c0e28cf2fb7a0092e3a8735645",
+                "result": "RISC-V",
+                "detail":{
+                    "riscv64.c":{
+                        "arc_line":["991"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "67216c741c4ebe8494f74f1ceabff9cdafb67883",
+                "result": "RISC-V",
+                "detail":{
+                    "riscv64.c":{
+                        "arc_line":["992"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "0d9fcbe3803c684fbfee893837a94d3c8f377805",
+                "result": "RISC-V",
+                "detail":{
+                    "netdump.c":{
+                        "arc_line":[]
+                    },
+                    "riscv64.c":{
+                        "arc_line":[]
+                    }
+                }
+            },
+            {
+                "commit_hash": "5cfcdb4ebcb159c1c47b7c1805cd9b274ca27ff5",
+                "result": "RISC-V",
+                "detail":{
+                    "riscv64.c":{
+                        "arc_line":[]
+                    }
+                }
+            },
+            {
+                "commit_hash": "6c281cd355c904ddb82cbb49278b925d2ed13365",
+                "result": "RISC-V",
+                "detail":{
+                    "riscv64.c":{
+                        "arc_line":[]
+                    }
+                }
+            },
+            {
+                "commit_hash": "3f4714967961c2ca8b70dccb938a5258b6572d2b",
+                "result": "RISC-V",
+                "detail":{
+                    "riscv64.c":{
+                        "arc_line":[]
+                    }
+                }
+            },
+            {
+                "commit_hash": "0d5ad129252a18a46d1818a68ed22b35c5234289",
+                "result": "RISC-V",
+                "detail":{
+                    "riscv64.c":{
+                        "arc_line":[]
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "repo_name": "perftest",
+        "url": "https://github.com/linux-rdma/perftest.git",
+        "commits":[
+            {
+                "commit_hash": "df20eb17a10aa4c930887c92a4d5a3832402a096",
+                "result": "RISC-V",
+                "detail": {
+                    "src/get_clock.c": {
+                        "arc_line": ["241-301"]
+                    },
+                    "src/get_clock.h": {
+                        "arc_line": ["107-115"]
+                    }
+                }
+            }, 
+            {
+                "commit_hash": "08d1c895359c89ff16e85bc86dbe66fe47c90274",
+                "result": "RISC-V",
+                "detail": {
+                    "src/get_clock.c": {
+                        "arc_line": ["225-228"]
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "repo_name": "etmem",
+        "url": "https://gitee.com/openeuler/etmem.git",
+        "commits":[
+            {
+                "commit_hash": "d7ad5c9181654b0131969454deab411bb952b8fe",
+                "result": "RISC-V",
+                "detail": {
+                    "etmem/CMakeLists.txt": {
+                        "arc_line": []
+                    },
+                    "etmem/test/CMakeLists.txt": {
+                        "arc_line": []
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "repo_name": "kmod-kvdo",
+        "url": "https://gitee.com/src-openeuler/kmod-kvdo.git",
+        "commits":[
+            {
+                "commit_hash": "b585583b89aac6ccccc0f78e33c4aaecef279fdd",
+                "result": "RISC-V",
+                "detail": {
+                    "01-add-riscv64-support.patch": {
+                        "arc_line": []
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "repo_name": "libecap",
+        "url": "https://gitee.com/src-openeuler/libecap.git",
+        "commits":[
+            {
+                "commit_hash": "35083472d99d22a3d06c886f2fc6ee018176e5cb",
+                "result": "RISC-V",
+                "detail": {
+                    "autoconf.h": {
+                        "arc_line": ["47-48"]
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "repo_name": "ltrace",
+        "url": "https://gitlab.com/cespedes/ltrace.git",
+        "commits":[
+            {
+                "commit_hash": "49d122ed52a798bb0752947cc5ffd1f909681a74",
+                "result": "RISC-V",
+                "detail": {
+                    "README": {
+                        "arc_line": ["38"]
+                    },
+                    "configure.ac": {
+                        "arc_line": ["48","223","419"]
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "repo_name": "mstflint",
+        "url": "https://github.com/Mellanox/mstflint.git",
+        "commits":[
+            {
+                "commit_hash": "889235fee41dc9b565407ce923e5af100c839b97",
+                "result": "RISC-V",
+                "detail": {
+                    "common/compatibility.h": {
+                        "arc_line": ["66-67","114"]
+                    },
+                    "mtcr_ul/packets_common.h": {
+                        "arc_line": ["155-156","170"]
+                    },
+                    "tools_layouts/adb_to_c_utils.h": {
+                        "arc_line":["143-144","188"]
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "repo_name": "toolbox",
+        "url": "https://github.com/containers/toolbox.git",
+        "commits":[
+            {
+                "commit_hash": "6ad9c631806961f3382646e2a3529ddd00967971",
+                "result": "aarch64;arm;Intel x86;x86_64;PowerPC;SystemZ",
+                "detail": {
+                    "src/libc-wrappers/libc-wrappers.c": {
+                        "arc_line": ["21-32"]
+                    }
+                }
+            }
+        ]
+    }
+]

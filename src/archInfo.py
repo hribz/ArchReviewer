@@ -403,7 +403,7 @@ def analysisPass(folder, db, git_diff):
 
     json.dump(json_result, fd, indent=2)
         
-    result_to_backend['result'] = ','.join(result_arch)
+    result_to_backend['result'] = ';'.join(result_arch)
     parent_directory = os.path.abspath(os.path.join(folder, os.pardir))
     with open(os.path.join(parent_directory, __backendfile), 'w') as f:
         json.dump(result_to_backend, f, indent=2)
