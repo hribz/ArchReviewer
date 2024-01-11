@@ -7,3 +7,5 @@ dist
 input.txt
 real-project
 .vscode/*
+file_list.json
+git-repo/*

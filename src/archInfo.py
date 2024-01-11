@@ -113,24 +113,31 @@ def __getCondStr(ifdefnode):
             res = ''.join([token for token in nexpr.itertext()])
     return res
 
+def __arch_info_match(arch_info, info_list):
+    if len(info_list) > 0:
+        found = any(re.match(pattern, arch_info) for pattern in info_list)
+        if found:
+            return True
+    return False
+
 def findMacroNameInDb(macro_name, db):
     for arch_name, arch_dict in db.items():
         if 'macro_names' in arch_dict:
-            if macro_name in arch_dict.get('macro_names'):
+            if __arch_info_match(macro_name, arch_dict.get('macro_names')):
                 return str(arch_name)
     return None
 
 def findIntrinsicsInDb(intrinsics, db):
     for arch_name, arch_dict in db.items():
         if 'intrinsics' in arch_dict:
-            if intrinsics in arch_dict.get('intrinsics'):
+            if __arch_info_match(intrinsics, arch_dict.get('intrinsics')):
                 return str(arch_name)
     return None
 
 def findIncludeNameInDb(include, db):
     for arch_name, arch_dict in db.items():
         if 'include_file_name' in arch_dict:
-            if include in arch_dict.get('include_file_name'):
+            if __arch_info_match(include, arch_dict.get('include_file_name')):
                 return str(arch_name)
     return None
 
@@ -268,7 +275,7 @@ def __line_has_change(file, line_b, line_e, git_diff):
             lb = integers[0]
             le = integers[1]
         else:
-            print("diff lines error {%s} {%s}", file, str(diff_lines))
+            print("diff lines error {%s} {%s}" % (file, str(diff_lines)))
             continue
 
         if le<line_b:
@@ -277,10 +284,12 @@ def __line_has_change(file, line_b, line_e, git_diff):
             break
         lb = max(line_b, integers[0])
         le = min(line_e, integers[1])
+        print("file {%s}: begin {%s} end {%s}" % (file, lb, le))
         if (lb==le):
             ret.append(str(lb))
         else:
             ret.append(str(lb)+'-'+str(le))
+        flag = True
     return flag, ret
 
 def __str2line(input_string):
@@ -344,7 +353,7 @@ def analysisPass(folder, db, git_diff):
             # print(__cpp_root)
                 
         if __line_and_include:
-            # print(__line_and_intrinsics)
+            # print(__line_and_include)
             for line in __line_and_include.keys():
                 if not json_data.has_key(str(line) + ',' + str(line)):
                     json_data[str(line) + ',' + str(line)] = list(__line_and_include[line])

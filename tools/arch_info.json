@@ -1,18 +1,25 @@
 {
-  "aarch64": {
+  "RISC-V" :{
     "include_file_name": [
-      ""
     ], 
     "macro_names": [
-      "__aarch64__"
+      "__riscv.*"
     ], 
     "intrinsics": [
-      ""
+    ]
+  },
+  "aarch64": {
+    "include_file_name": [
+    ], 
+    "macro_names": [
+      "__aarch64__",
+      "__arm64__"
+    ], 
+    "intrinsics": [
     ]
   }, 
   "x86_64": {
     "include_file_name": [
-      "immintrin.h"
     ], 
     "macro_names": [
       "__x86_64__", 
@@ -22,12 +29,10 @@
       "_M_AMD64"
     ], 
     "intrinsics": [
-      ""
     ]
   }, 
   "mips": {
     "include_file_name": [
-      ""
     ], 
     "macro_names": [
       "__mips__", 
@@ -42,8 +47,10 @@
     ], 
     "intrinsics": []
   }, 
-  "x86": {
-    "include_file_name": [], 
+  "Intel x86": {
+    "include_file_name": [
+      ".*mmintrin.h"
+    ], 
     "macro_names": [
       "i386", 
       "__i386", 
@@ -147,17 +154,19 @@
   }, 
   "arm": {
     "include_file_name": [
-      ""
+      "arm_.*.h"
     ], 
     "macro_names": [
       "__arm__", 
       "__thumb__", 
-      "__ARM_ARCH_", 
-      "__TARGET_ARCH_ARM", 
-      "__TARGET_ARCH_THUMB"
+      "__ARM_ARCH_.*", 
+      "__TARGET_ARCH_.*",
+      "__ARM",
+      "_M_ARM",
+      "_M_ARMT",
+      "__arm"
     ], 
     "intrinsics": [
-      ""
     ]
   }
 }
