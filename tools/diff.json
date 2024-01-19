@@ -1,42 +1,48 @@
 {
-  "src/archInfo.py": [
-    [
-      30, 
-      37
-    ], 
-    [
-      123, 
-      141
-    ], 
-    [
-      198, 
-      216
-    ], 
-    [
-      253, 
-      268
-    ], 
-    [
-      1
-    ], 
-    [
-      275, 
-      284
-    ], 
-    [
-      1
-    ], 
-    [
-      1
-    ], 
-    [
-      1
-    ]
-  ], 
-  "test/source/test.c": [
+  "src/meson.build": [
     [
       1, 
-      7
+      6
+    ], 
+    [
+      29, 
+      38
+    ]
+  ], 
+  "src/go-build-wrapper": [
+    [
+      16, 
+      25
+    ], 
+    [
+      27, 
+      32
+    ]
+  ], 
+  "src/libc-wrappers/libc-wrappers.c": [
+    [
+      16, 
+      25
+    ], 
+    [
+      27, 
+      32
+    ]
+  ], 
+  "src/libc-wrappers/meson.build": [
+    [
+      16, 
+      25
+    ], 
+    [
+      27, 
+      32
+    ]
+  ], 
+  "meson.build": [
+    [
+      1, 
+      16
     ]
   ]
 }

@@ -31,7 +31,7 @@ __conditionals_else = ['else']
 __conditionals_endif = ['endif']
 __conditionals_all = __conditionals + __conditionals_elif + \
         __conditionals_else
-__macro_define = ['define']
+__macro_define = ['define', 'undef']
 __function_call = ['call']
 __include_file = ['include']
 __comment = ['comment']
@@ -141,6 +141,23 @@ def findIncludeNameInDb(include, db):
                 return str(arch_name)
     return None
 
+def __getNodeMacros(elem, cond_str, src_line, db):
+    arch_names = set()
+    # print(elem)
+    for event_, operand in etree.iterwalk(elem, events=("start", "end")):
+        ns_, tag_ = __cpprens.match(operand.tag).groups()
+        if ((tag_ in ['name']) and len(operand)==0 and (event_ == 'start')):
+            try:
+                macro_name = __identifier.parseString(operand.text)[0]
+            except pypa.ParseException:
+                print('ERROR (parse): cannot parse cond_str (%s) -- (%s)' %
+                    (cond_str, src_line))
+            else:
+                arch_name = findMacroNameInDb(macro_name, db)
+                if arch_name:
+                    arch_names.add(arch_name)
+    return arch_names
+
 def write_content(lines,cppnode):
     if isinstance(cppnode,CppNode) and cppnode.loc > 0 and cppnode.endLoc > 0:
         content = ''
@@ -170,20 +187,7 @@ def buildCppTree(source,root, db):
 
         if ((tag in __conditionals_all) and (event == 'start') and (ns == __cppnscpp)):
             cond_str = __getCondStr(elem)
-            arch_names = set()
-            # print(elem)
-            for event_, operand in etree.iterwalk(elem, events=("start", "end")):
-                ns_, tag_ = __cpprens.match(operand.tag).groups()
-                if ((tag_ in ['name']) and len(operand)==0 and (event_ == 'start')):
-                    try:
-                        macro_name = __identifier.parseString(operand.text)[0]
-                    except pypa.ParseException:
-                        print('ERROR (parse): cannot parse cond_str (%s) -- (%s)' %
-                            (cond_str, src_line))
-                    else:
-                        arch_name = findMacroNameInDb(macro_name, db)
-                        if arch_name:
-                            arch_names.add(arch_name)
+            arch_names = __getNodeMacros(elem, cond_str, src_line, db)
 
             if (tag in __conditionals): # #if #ifdef #ifndef
                 cond_node = CondNode(src_line)
@@ -204,7 +208,11 @@ def buildCppTree(source,root, db):
                 __line_and_arch[cpp_node] = arch_names
 
         if ((tag in __macro_define) and (event == 'end') and (ns == __cppnscpp)):
-            pass
+            itdesc = elem.itertext()
+            define = ''.join([it for it in itdesc])
+            arch_names = __getNodeMacros(elem, define, src_line, db)
+            if arch_names:
+                __line_and_intrinsics[src_line] = list(arch_names)
 
         if ((tag in __conditionals_endif) and (event == "start") and (ns == __cppnscpp)):
             if (len(node_stack)==1):
@@ -264,6 +272,7 @@ def __line_has_change(file, line_b, line_e, git_diff):
     '''
     ret = []
     flag = False
+    pre_line = -1
     if git_diff.has_key(file):
         diff_lines = git_diff[file]
     else:
@@ -282,13 +291,18 @@ def __line_has_change(file, line_b, line_e, git_diff):
             continue
         if lb>line_e:
             break
-        lb = max(line_b, integers[0])
-        le = min(line_e, integers[1])
+        # lb = max(line_b, integers[0])
+        # le = min(line_e, integers[1])
+        lb = integers[0]
+        le = integers[1]
+        if len(ret)>0 and lb == pre_line:
+            continue
         print("file {%s}: begin {%s} end {%s}" % (file, lb, le))
         if (lb==le):
             ret.append(str(lb))
         else:
             ret.append(str(lb)+'-'+str(le))
+        pre_line=lb
         flag = True
     return flag, ret
 

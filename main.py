@@ -7,7 +7,7 @@ import time
 from typing import Optional, List
 import re
 
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
 from dotenv import load_dotenv
 import subprocess
 import requests
@@ -35,7 +35,7 @@ app = Inference(__name__)
 def inference():
     """
     request format:
-    POST /inference?repository={repository_id}
+    POST /inference
     [
         {
             "repo_id": ...,
@@ -80,11 +80,11 @@ def inference():
     ...
     ]
     """
-    name = request.args.get('repository', None)
     commits = []
     try:
         raw_data = request.get_data(as_text=True)
         commits = json.loads(raw_data)
+        print(commits)
         if len(commits) == 0 or type(commits) != list:
             raise Exception()
         for commit in commits:
@@ -111,7 +111,7 @@ def inference():
     result_file_path = 'git-repo/_ArchReviewer/result_for_backend.json'
 
     for commit in commits:
-        params = {'repo_id': commit.get('repo_id'), 'commit_hash': commit.get(hash)}
+        params = {'repo_id': commit.get('repo_id'), 'commit_hash': commit.get('hash')}
         # response = requests.get('http://47.94.210.196:12888/api/file', params=params)
         # json_data = response.json()
         with open('file_list.json', 'r') as f:
@@ -126,12 +126,14 @@ def inference():
             for file in file_list:
                 if not file.get('binary'):
                     old_file_path = os.path.join(old_commit_floder, file.get('path'))
-                    os.makedirs(os.path.dirname(old_file_path))
+                    if not os.path.exists(os.path.dirname(old_file_path)):
+                        os.makedirs(os.path.dirname(old_file_path))
                     with open(old_file_path, 'wb') as f:
                         f.write(file.get('content_old'))
                         # json.dump(file.get('content_old'), f)
                     new_file_path = os.path.join(new_commit_floder, file.get('path'))
-                    os.makedirs(os.path.dirname(new_file_path))
+                    if not os.path.exists(os.path.dirname(new_file_path)):
+                        os.makedirs(os.path.dirname(new_file_path))
                     with open(new_file_path, 'wb') as f:
                         f.write(file.get('content_new'))
                         # json.dump(file.get('content_new'), f)
@@ -166,7 +168,7 @@ def inference():
                 print("File not found: {%s}" % result_file_path)
                 # abort(500)
     ret = {"status": 0, "msg": "", "payload": result_json}
-    return ret
+    return jsonify(ret)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
