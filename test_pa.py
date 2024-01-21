@@ -54,6 +54,8 @@ current_directory = os.getcwd()
 work_dir = os.path.join(current_directory, 'real-project')
 repo_num = 0
 commit_num = 0
+commit_right = {}
+commit_right_num = 0
 file_num = 0
 line_num = 0
 
@@ -81,12 +83,15 @@ for truth in ground_truth:
         if repo is None:
             raise ConnectionError("can't get repo")
     
+    commit_right[repo_name] = []
     for commit_json in truth["commits"]:
         detail = commit_json["detail"]
+        commit_json['file_num'] = 0
+        commit_json['block_num'] = 0
         
         for file_name in detail.keys():
-            file_num = file_num + 1
-            line_num = line_num + len(detail[file_name]["arc_line"])
+            commit_json['file_num'] = commit_json['file_num'] + 1
+            commit_json['block_num'] = commit_json['block_num'] + len(detail[file_name]["arch_line"])
 
         commit_hash = commit_json["commit_hash"]
         try:
@@ -107,7 +112,7 @@ for truth in ground_truth:
                 elif file_type == "D":
                     file_content_old = binary_filter(commit, change.a_path)
                 else:
-                    file_diff = repo.git.diff(parent, commit, change.a_path, change.b_path)
+                    file_diff = repo.git.diff(['-U0'], parent, commit, change.a_path, change.b_path)
                     file_content_old = binary_filter(parent, change.a_path)
                     file_content_new = binary_filter(commit, change.b_path)
                 if file_content_new is None:
@@ -125,7 +130,8 @@ for truth in ground_truth:
         with codecs.open('file_list.json', 'w', encoding='utf-8') as f:
             json.dump(file_list, f, indent=2, ensure_ascii=False)
         params = [{"repo_id": "0","hash": commit_hash}]
-        response = requests.post('http://localhost:12499/inference', data=params)
+        raw_data = json.dumps(params)
+        response = requests.post('http://localhost:12499/inference', data=raw_data)
         data = {}
         try:
             data = response.json()
@@ -133,8 +139,24 @@ for truth in ground_truth:
         except requests.exceptions.JSONDecodeError as e:
             print('Error decoding JSON: '+ str(e))
         
-        with open(repo_dir+'/_ArchReviewer/result_for_backend.json', 'w') as f:
-            json.dump(data, f, indent=2)
+        commit_json['pa'] = data
+        commit_json['pa_right'] = 'No'
+        commit_json['file_right_num'] = 0
+        commit_json['block_right_num'] = 0
+        if data.has_key('payload'):
+            results = data['payload']
+            for result in results:
+                s1 = set(str(result['result']).split(';'))
+                s2 = set(str(commit_json['result']).split(';'))
+                if s1 == s2:
+                    commit_json['pa_right'] = 'Yes'
+                    commit_right[repo_name].append(commit_hash)
+                    commit_right_num = commit_right_num + 1
+                commit_json['file_right_num'] = len(result['detail'])
+                for result_file in result['detail'].keys():
+                    s1 = set(commit_json['detail'][result_file]['arch_line'])
+                    s2 = set(result['detail'][result_file]['arch_line'])
+                    commit_json['block_right_num'] = commit_json['block_right_num'] + len(s2)
 
     # with open('test_real_project.txt', 'w') as f:
     #     f.write(repo_dir)
@@ -144,5 +166,10 @@ for truth in ground_truth:
     print(repo_name+' finish\n')
     repo_num = repo_num+1
     commit_num = commit_num+len(truth["commits"])
-    
-print("repo num: %d, commit num: %d, file num: %d, line num: %d" % (repo_num, commit_num, file_num, line_num))
+
+with open('pa_result.json', 'w') as f:
+    json.dump(ground_truth, f, indent=2)
+
+print("repo num: %d\ncommit num: %d, file num: %d, line num: %d" % (repo_num, commit_num, file_num, line_num))
+print(commit_right)
+print("commit right percent: %d/%d" % (commit_right_num, commit_num))

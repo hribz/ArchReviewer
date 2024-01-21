@@ -38,6 +38,7 @@ __comment = ['comment']
 __curfile = ''          # current processed xml-file
 __defset = set()        # macro-objects
 __defsetf = dict()      # macro-objects per file
+__MAX_LINE = sys.maxsize
 
 
 ##################################################
@@ -293,11 +294,9 @@ def __line_has_change(file, line_b, line_e, git_diff):
             break
         # lb = max(line_b, integers[0])
         # le = min(line_e, integers[1])
-        lb = integers[0]
-        le = integers[1]
         if len(ret)>0 and lb == pre_line:
             continue
-        print("file {%s}: begin {%s} end {%s}" % (file, lb, le))
+        # print("file {%s}: begin {%s} end {%s}" % (file, lb, le))
         if (lb==le):
             ret.append(str(lb))
         else:
@@ -356,6 +355,14 @@ def analysisPass(folder, db, git_diff):
         arch_line = []
         comments = {}
         
+        # check file name(e.g. riscv.c)
+        file_arch = findIncludeNameInDb(file, db)
+        if file_arch:
+            result_arch.add(file_arch)
+            flag, diff_line = __line_has_change(file, 0, __MAX_LINE, git_diff)
+            difference = set(diff_line) - set(arch_line) 
+            arch_line.extend(difference)  
+
         if __line_and_arch:
             for node in __line_and_arch.keys():
                 json_data[str(node.loc) + ',' + str(node.endLoc)] = list(__line_and_arch[node])
@@ -363,7 +370,8 @@ def analysisPass(folder, db, git_diff):
                 flag, diff_line = __line_has_change(file, node.loc, node.endLoc, git_diff)
                 if flag:
                     result_arch = result_arch.union(__line_and_arch[node])
-                    arch_line.extend(diff_line)
+                    difference = set(diff_line) - set(arch_line)
+                    arch_line.extend(difference)
             # print(__cpp_root)
                 
         if __line_and_include:
@@ -377,8 +385,9 @@ def analysisPass(folder, db, git_diff):
                 flag, diff_line = __line_has_change(file, line, line, git_diff)
                 if flag:
                     result_arch = result_arch.union(__line_and_include[line])
-                    arch_line.extend(diff_line)
-
+                    difference = set(diff_line) - set(arch_line)
+                    arch_line.extend(difference)
+          
         if __line_and_intrinsics:
             # print(__line_and_intrinsics)
             for line in __line_and_intrinsics.keys():
@@ -390,7 +399,8 @@ def analysisPass(folder, db, git_diff):
                 flag, diff_line = __line_has_change(file, line, line, git_diff)
                 if flag:
                     result_arch = result_arch.union(__line_and_include[line])
-                    arch_line.extend(diff_line)
+                    difference = set(diff_line) - set(arch_line)
+                    arch_line.extend(difference)
         
         if __line_and_comment:
             for line in __line_and_comment.keys():
@@ -410,10 +420,9 @@ def analysisPass(folder, db, git_diff):
         if json_data:
             json_result[file] = json_data
         
-        if arch_line:
-            result_to_backend['detail'][file] = dict()
-            result_to_backend['detail'][file]['arch_line'] = arch_line
-            result_to_backend['detail'][file]['comments'] = comments
+        result_to_backend['detail'][file] = dict()
+        result_to_backend['detail'][file]['arch_line'] = arch_line
+        result_to_backend['detail'][file]['comments'] = comments
 
     json.dump(json_result, fd, indent=2)
         

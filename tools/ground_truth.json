@@ -9,40 +9,40 @@
                 "result": "RISC-V",
                 "detail": {
                     "Makefile": {
-                        "arc_line": ["67", "87", "441-443"]
+                        "arch_line": ["67", "87", "441-443"]
                     },
                     "README": {
-                        "arc_line": ["40-41", "101-102"]
+                        "arch_line": ["40-41", "101-102"]
                     },
                     "configure.c": {
-                        "arc_line": ["110", "126", "141", "164-165", "176", "413-415", "469-474", "515-522", "686-688"]
+                        "arch_line": ["110", "126", "141", "164-165", "176", "413-415", "469-474", "515-522", "686-688"]
                     },
                     "defs.h": {
-                        "arc_line": ["79", "121-123", "165-167", "3495-3551", "6783-6861"]
+                        "arch_line": ["79", "121-123", "165-167", "3495-3551", "6783-6861"]
                     },
                     "diskdump.c": {
-                        "arc_line": ["625-627", "786-787", "1759-1760", "2567-2568"]
+                        "arch_line": ["625-627", "786-787", "1759-1760", "2567-2568"]
                     },
                     "help.c": {
-                        "arc_line": ["9516-9617", "9576-9577"]
+                        "arch_line": ["9516-9617", "9576-9577"]
                     },
                     "lkcd_vmdump_v1.h": {
-                        "arc_line": ["117"]
+                        "arch_line": ["117"]
                     },
                     "lkcd_vmdump_v2_v3.h": {
-                        "arc_line": ["40", "87"]
+                        "arch_line": ["40", "87"]
                     },
                     "netdump.c": {
-                        "arc_line": ["303-308","2944-2945"]
+                        "arch_line": ["303-308","2944-2945"]
                     },
                     "ramdump.c": {
-                        "arc_line": ["191-192"]
+                        "arch_line": ["191-192"]
                     },
                     "riscv64.c": {
-                        "arc_line": ["1-54"]
+                        "arch_line": ["1-54"]
                     },
                     "symbols.c": {
-                        "arc_line": ["3746-3750", "4010-4014"]
+                        "arch_line": ["3746-3750", "4010-4014"]
                     }
                 }
             },
@@ -51,13 +51,13 @@
                 "result": "RISC-V",
                 "detail":{
                     "defs.h":{
-                        "arc_line":["3499-3577","3629-3636","6924-6927","6951-6956"]
+                        "arch_line":["3499-3577","3629-3636","6924-6927","6951-6956"]
                     },
                     "diskdump.c":{
-                        "arc_line":["1534-1539","1619-1622"]
+                        "arch_line":["1534-1539","1619-1622"]
                     },
                     "riscv64.c":{
-                        "arc_line":["19-119","124-326","340-931","935-1029","1032-1034"]
+                        "arch_line":["19-119","124-326","340-931","935-1029","1032-1034"]
                     }
                 }
             },
@@ -66,7 +66,7 @@
                 "result": "RISC-V",
                 "detail":{
                     "riscv64.c":{
-                        "arc_line":["991"]
+                        "arch_line":["991"]
                     }
                 }
             },
@@ -75,7 +75,7 @@
                 "result": "RISC-V",
                 "detail":{
                     "riscv64.c":{
-                        "arc_line":["992"]
+                        "arch_line":["992"]
                     }
                 }
             },
@@ -84,10 +84,10 @@
                 "result": "RISC-V",
                 "detail":{
                     "netdump.c":{
-                        "arc_line":["45","2679-2682","2939-2940"]
+                        "arch_line":["45","2679-2682","2939-2940"]
                     },
                     "riscv64.c":{
-                        "arc_line":["36-46"]
+                        "arch_line":["36-46"]
                     }
                 }
             },
@@ -96,7 +96,7 @@
                 "result": "RISC-V",
                 "detail":{
                     "riscv64.c":{
-                        "arc_line":["1323-1360"]
+                        "arch_line":["1323-1360"]
                     }
                 }
             },
@@ -105,7 +105,7 @@
                 "result": "RISC-V",
                 "detail":{
                     "riscv64.c":{
-                        "arc_line":["135-193"]
+                        "arch_line":["135-193"]
                     }
                 }
             },
@@ -114,7 +114,7 @@
                 "result": "RISC-V",
                 "detail":{
                     "riscv64.c":{
-                        "arc_line":["119-143","147-165"]
+                        "arch_line":["119-143","147-165"]
                     }
                 }
             },
@@ -123,7 +123,7 @@
                 "result": "RISC-V",
                 "detail":{
                     "riscv64.c":{
-                        "arc_line":["168-170","174-184"]
+                        "arch_line":["168-170","174-184"]
                     }
                 }
             }
@@ -139,10 +139,10 @@
                 "result": "RISC-V",
                 "detail": {
                     "src/get_clock.c": {
-                        "arc_line": ["241-301"]
+                        "arch_line": ["241-301"]
                     },
                     "src/get_clock.h": {
-                        "arc_line": ["107-115"]
+                        "arch_line": ["107-115"]
                     }
                 }
             }, 
@@ -151,7 +151,73 @@
                 "result": "RISC-V",
                 "detail": {
                     "src/get_clock.c": {
-                        "arc_line": ["225-228"]
+                        "arch_line": ["225-228"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "b24eb133412c502ed9badbf6082d4d0c6661a09d",
+                "result": "arm",
+                "detail": {
+                    "src/get_clock.h": {
+                        "arch_line": ["73-80"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "a2565af5668189f26b28e75e4946e34b449c2780",
+                "result": "SystemZ",
+                "detail": {
+                    "src/get_clock.c": {
+                        "arch_line": ["136","215"]
+                    },
+                    "src/get_clock.h":{
+                        "arch_line": ["73"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "8524f88ce6ca74cf9a0ffdcfd118db9f9fc291c4",
+                "result": "SPARC",
+                "detail": {
+                    "README_sparc": {
+                        "arch_line": ["1-42"]
+                    },
+                    "src/get_clock.c": {
+                        "arch_line": ["158-147"]
+                    },
+                    "src/get_clock.h":{
+                        "arch_line": ["81-87"]
+                    },
+                    "src/perftest_parameters.c": {
+                        "arch_line": ["110-117"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "e37cded4bc4f155e7404cf5e59bbfba1660ce951",
+                "result": "aarch64",
+                "detail": {
+                    "src/get_clock.c": {
+                        "arch_line": ["194-199"]
+                    },
+                    "src/get_clock.h":{
+                        "arch_line": ["81-91"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "e48c7472337bae76ec056471865d4f6ed6eb5344",
+                "result": "SystemZ",
+                "detail": {
+                    "README": {
+                        "arch_line": ["239-241"]
+                    },
+                    "src/get_clock.c": {
+                        "arch_line": ["135","184","188-190","208"]
+                    },
+                    "src/get_clock.h":{
+                        "arch_line": ["73-80"]
                     }
                 }
             }
@@ -167,10 +233,10 @@
                 "result": "RISC-V",
                 "detail": {
                     "etmem/CMakeLists.txt": {
-                        "arc_line": []
+                        "arch_line": []
                     },
                     "etmem/test/CMakeLists.txt": {
-                        "arc_line": []
+                        "arch_line": []
                     }
                 }
             }
@@ -186,7 +252,7 @@
                 "result": "RISC-V",
                 "detail": {
                     "01-add-riscv64-support.patch": {
-                        "arc_line": ["1-27"]
+                        "arch_line": ["1-27"]
                     }
                 }
             }
@@ -202,7 +268,16 @@
                 "result": "RISC-V",
                 "detail": {
                     "autoconf.h": {
-                        "arc_line": ["47-48"]
+                        "arch_line": ["47-48"]
+                    }
+                }
+            },
+            {
+                "commit_hash": "80c7d975d48ba272a987261a1bc8aa90bb3239cf",
+                "result": "Intel x86;IA-64;PowerPC;SystemZ;x86_64;arm;alpha",
+                "detail": {
+                    "autoconf.h": {
+                        "arch_line": ["1-51"]
                     }
                 }
             }
@@ -218,10 +293,10 @@
                 "result": "RISC-V",
                 "detail": {
                     "README": {
-                        "arc_line": ["38"]
+                        "arch_line": ["38"]
                     },
                     "configure.ac": {
-                        "arc_line": ["48","223","419"]
+                        "arch_line": ["48","223","419"]
                     }
                 }
             }
@@ -237,13 +312,13 @@
                 "result": "RISC-V",
                 "detail": {
                     "common/compatibility.h": {
-                        "arc_line": ["66-67","114"]
+                        "arch_line": ["66-67","114"]
                     },
                     "mtcr_ul/packets_common.h": {
-                        "arc_line": ["155-156","170"]
+                        "arch_line": ["155-156","170"]
                     },
                     "tools_layouts/adb_to_c_utils.h": {
-                        "arc_line":["143-144","188"]
+                        "arch_line":["143-144","188"]
                     }
                 }
             }
@@ -259,7 +334,7 @@
                 "result": "aarch64;arm;Intel x86;x86_64;PowerPC;SystemZ",
                 "detail": {
                     "src/libc-wrappers/libc-wrappers.c": {
-                        "arc_line": ["21-32"]
+                        "arch_line": ["21-32"]
                     }
                 }
             }

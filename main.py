@@ -84,6 +84,7 @@ def inference():
     try:
         raw_data = request.get_data(as_text=True)
         commits = json.loads(raw_data)
+        print("raw_data: "+raw_data)
         print(commits)
         if len(commits) == 0 or type(commits) != list:
             raise Exception()
@@ -145,7 +146,7 @@ def inference():
                     for match in matches:
                         if ',' in match:
                             current_line.extend(map(int, match.split(',')))
-                            current_line[1] = current_line[0]+current_line[1]
+                            current_line[1] = current_line[0]+current_line[1]-1
                         else:
                             current_line.append(int(match))
                         result_by_line.append(current_line)
