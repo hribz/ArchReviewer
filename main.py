@@ -8,13 +8,25 @@ from typing import Optional, List
 import re
 
 from flask import Flask, request, abort, jsonify
+from nacos_py import NacosService, NacosClient
 from dotenv import load_dotenv
 import subprocess
 import requests
 import shutil
+import random
 
 IP = "localhost"
 PORT = "12499"
+
+NACOS_ENABLE = True
+
+SERVER_ADDRESSES = "http://localhost:8848"
+NAMESPACE = "public"
+CLIENT: Optional[NacosClient] = None
+SERVICE_NAME = "sa"
+
+NAME = "nacos"  # Nacos用户名
+PWD = "nacos"  # Nacos密码
 
 config = {
     "HTTP_PROXY": "",
@@ -22,6 +34,18 @@ config = {
     "ALL_PROXY": ""
 }
 
+def heartbeat():
+    while True:
+        CLIENT.send_heartbeat("DEFAULT_GROUP@@" + SERVICE_NAME, IP, PORT)
+        time.sleep(3)
+
+logging.basicConfig(level=logging.DEBUG)
+load_dotenv()
+if NACOS_ENABLE:
+    CLIENT = NacosClient(SERVER_ADDRESSES, namespace=NAMESPACE, username=NAME, password=PWD)
+    NacosService(SERVICE_NAME, CLIENT).register(IP, PORT)
+    heart = threading.Thread(target=heartbeat, daemon=True)
+    heart.start()
 
 class Inference(Flask):
     def __init__(self, *args, **kwargs):
@@ -30,6 +54,32 @@ class Inference(Flask):
 
 app = Inference(__name__)
 
+def get_service(service_name):
+    instances = CLIENT.list_naming_instance(service_name, namespace_id=NAMESPACE, healthy_only=True)
+    if len(instances["hosts"][0]) == 0:
+        raise Exception("服务调用异常:没有找到指定服务-%s" % service_name)
+    # 负载均衡
+    host = random.choice(instances["hosts"])
+    return host["ip"], host["port"]
+
+def updated_config():
+    global config
+    data_id = "inference.json"
+    config = json.loads(CLIENT.get_config(data_id, "DEFAULT_GROUP", no_snapshot=True))
+    for _config in config.keys():
+        os.environ[_config] = config[_config]
+
+def get_commit_info(repository_id, commit_id):
+    service_ip, service_port = get_service("backend")
+    params = {
+        "repo_id": repository_id,
+        "commit_hash": commit_id,
+        "brief_only": 1
+    }
+    result = requests.get(f"http://{service_ip}:{service_port}/api/file", params=params)
+    if result.status_code != 200:
+        raise Exception(f"服务调用异常:调用失败-{result.status_code}")
+    return result
 
 @app.route("/inference", methods=["POST"])
 def inference():
@@ -112,14 +162,13 @@ def inference():
     result_file_path = 'git-repo/_ArchReviewer/result_for_backend.json'
 
     for commit in commits:
-        params = {'repo_id': commit.get('repo_id'), 'commit_hash': commit.get('hash')}
-        # response = requests.get('http://47.94.210.196:12888/api/file', params=params)
-        # json_data = response.json()
-        with open('file_list.json', 'r') as f:
-            json_data = json.load(f)
+        response = get_commit_info(commit['repo_id'], commit['hash'])
+        json_data = json.loads(response.text)
+        # with open('file_list.json', 'r') as f:
+        #     json_data = json.load(f)
         # check request status
-        # if response.status_code != 200:
-        if False:
+        if response.status_code != 200:
+        # if False:
             print("request fail: {}, msg: {json_data.get('msg', 'No message found')}" % response.status_code)
         else:
             file_list = json_data.get('payload', [])
@@ -168,10 +217,8 @@ def inference():
             else:
                 print("File not found: {%s}" % result_file_path)
                 # abort(500)
-    ret = {"status": 0, "msg": "", "payload": result_json}
-    return jsonify(ret)
+    # ret = {"status": 0, "msg": "", "payload": result_json}
+    return result_json
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    load_dotenv()
     app.run(host=IP, port=int(PORT), debug=True)

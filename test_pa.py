@@ -132,7 +132,7 @@ for truth in ground_truth:
         params = [{"repo_id": "0","hash": commit_hash}]
         raw_data = json.dumps(params)
         response = requests.post('http://localhost:12499/inference', data=raw_data)
-        data = {}
+        data = []
         try:
             data = response.json()
             print(data)
@@ -143,8 +143,8 @@ for truth in ground_truth:
         commit_json['pa_right'] = 'No'
         commit_json['file_right_num'] = 0
         commit_json['block_right_num'] = 0
-        if data.has_key('payload'):
-            results = data['payload']
+        if data:
+            results = data
             for result in results:
                 s1 = set(str(result['result']).split(';'))
                 s2 = set(str(commit_json['result']).split(';'))
