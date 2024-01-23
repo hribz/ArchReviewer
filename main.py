@@ -73,8 +73,7 @@ def get_commit_info(repository_id, commit_id):
     service_ip, service_port = get_service("backend")
     params = {
         "repo_id": repository_id,
-        "commit_hash": commit_id,
-        "brief_only": 1
+        "commit_hash": commit_id
     }
     result = requests.get(f"http://{service_ip}:{service_port}/api/file", params=params)
     if result.status_code != 200:
@@ -164,6 +163,13 @@ def inference():
     for commit in commits:
         response = get_commit_info(commit['repo_id'], commit['hash'])
         json_data = json.loads(response.text)
+        if os.path.exists(new_commit_floder):
+            shutil.rmtree(new_commit_floder)
+            os.makedirs(new_commit_floder)
+        if os.path.exists(old_commit_floder):
+            shutil.rmtree(old_commit_floder)
+            os.makedirs(old_commit_floder)
+        # print (response.text)
         # with open('file_list.json', 'r') as f:
         #     json_data = json.load(f)
         # check request status
@@ -175,32 +181,35 @@ def inference():
             diff_json = {}
             for file in file_list:
                 if not file.get('binary'):
-                    old_file_path = os.path.join(old_commit_floder, file.get('path'))
-                    if not os.path.exists(os.path.dirname(old_file_path)):
-                        os.makedirs(os.path.dirname(old_file_path))
-                    with open(old_file_path, 'wb') as f:
-                        f.write(file.get('content_old'))
-                        # json.dump(file.get('content_old'), f)
-                    new_file_path = os.path.join(new_commit_floder, file.get('path'))
-                    if not os.path.exists(os.path.dirname(new_file_path)):
-                        os.makedirs(os.path.dirname(new_file_path))
-                    with open(new_file_path, 'wb') as f:
-                        f.write(file.get('content_new'))
-                        # json.dump(file.get('content_new'), f)
-                    diff_content = file.get('diff')
-                    matches = re.findall(r'\+(\d+(?:,\d+)?)', diff_content)
-                    result_by_line = []
-                    current_line = []
-
-                    for match in matches:
-                        if ',' in match:
-                            current_line.extend(map(int, match.split(',')))
-                            current_line[1] = current_line[0]+current_line[1]-1
-                        else:
-                            current_line.append(int(match))
-                        result_by_line.append(current_line)
+                    if file.get('content_old'):
+                        old_file_path = os.path.join(old_commit_floder, file.get('path'))
+                        if not os.path.exists(os.path.dirname(old_file_path)):
+                            os.makedirs(os.path.dirname(old_file_path))
+                        with open(old_file_path, 'w') as f:
+                            f.write(file.get('content_old'))
+                            # json.dump(file.get('content_old'), f)
+                    if file.get('content_new'):
+                        new_file_path = os.path.join(new_commit_floder, file.get('path'))
+                        if not os.path.exists(os.path.dirname(new_file_path)):
+                            os.makedirs(os.path.dirname(new_file_path))
+                        with open(new_file_path, 'w') as f:
+                            f.write(file.get('content_new'))
+                            # json.dump(file.get('content_new'), f)
+                    if file.get('diff'):
+                        diff_content = file.get('diff')
+                        matches = re.findall(r'\+(\d+(?:,\d+)?)', diff_content)
+                        result_by_line = []
                         current_line = []
-                    diff_json[file.get('path')] = result_by_line
+
+                        for match in matches:
+                            if ',' in match:
+                                current_line.extend(map(int, match.split(',')))
+                                current_line[1] = current_line[0]+current_line[1]-1
+                            else:
+                                current_line.append(int(match))
+                            result_by_line.append(current_line)
+                            current_line = []
+                        diff_json[file.get('path')] = result_by_line
             with open('tools/diff.json', 'w') as f:
                 json.dump(diff_json, f, indent=2)
 
@@ -216,8 +225,10 @@ def inference():
                         # abort(500)
             else:
                 print("File not found: {%s}" % result_file_path)
+                result_json.append({"result": "", "detail": {}})
                 # abort(500)
     # ret = {"status": 0, "msg": "", "payload": result_json}
+    print (len(result_json))
     return result_json
 
 if __name__ == '__main__':

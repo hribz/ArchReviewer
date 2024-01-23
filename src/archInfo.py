@@ -398,7 +398,7 @@ def analysisPass(folder, db, git_diff):
 
                 flag, diff_line = __line_has_change(file, line, line, git_diff)
                 if flag:
-                    result_arch = result_arch.union(__line_and_include[line])
+                    result_arch = result_arch.union(__line_and_intrinsics[line])
                     difference = set(diff_line) - set(arch_line)
                     arch_line.extend(difference)
         
