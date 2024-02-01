@@ -1,7 +1,7 @@
 {
   "RISC-V" :{
     "include_file_name": [
-      "riscv.*"
+      ".*riscv.*"
     ], 
     "macro_names": [
       "__riscv.*"
@@ -11,7 +11,7 @@
   },
   "aarch64": {
     "include_file_name": [
-      "aarch.*"
+      ".*aarch.*"
     ], 
     "macro_names": [
       "__aarch64__",
@@ -36,7 +36,7 @@
   }, 
   "mips": {
     "include_file_name": [
-      "mips.*"
+      ".*mips.*"
     ], 
     "macro_names": [
       "__mips__", 
@@ -53,7 +53,7 @@
   }, 
   "SystemZ": {
     "include_file_name": [
-      "systemz.*"
+      ".*systemz.*"
     ], 
     "macro_names": [
       "__370__", 
@@ -67,7 +67,7 @@
   }, 
   "PowerPC": {
     "include_file_name": [
-      "powerpc.*"
+      ".*powerpc.*"
     ], 
     "macro_names": [
       "__powerpc*", 
@@ -188,8 +188,8 @@
   }, 
   "arm": {
     "include_file_name": [
-      "arm_.*.h",
-      "arm.*"
+      ".*arm_.*.h",
+      ".*arm.*"
     ], 
     "macro_names": [
       "__arm__", 
@@ -206,7 +206,7 @@
   },
   "SPARC": {
     "include_file_name": [
-      "sparc.*"
+      ".*sparc.*"
     ], 
     "macro_names": [
       "__sparc.*"
@@ -216,7 +216,7 @@
   },
   "alpha": {
     "include_file_name": [
-      "alpha.*"
+      ".*alpha.*"
     ], 
     "macro_names": [
       "__alpha.*",
@@ -227,7 +227,7 @@
   },
   "IA-64": {
     "include_file_name": [
-      "IA-64.*"
+      ".*IA-64.*"
     ], 
     "macro_names": [
       "__ia64.*",

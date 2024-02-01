@@ -347,8 +347,6 @@ def analysisPass(folder, db, git_diff):
             print("ERROR: ifdef-endif mismatch in file (%s:%s msg: %s)" % (os.path.join(folder, file), e.loc, e.msg))
             continue
         
-        # print(__defsetf[__curfile])
-
         file = os.path.relpath(file, folder)
         file, ext = os.path.splitext(file)
         json_data = {}

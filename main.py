@@ -18,7 +18,7 @@ import random
 IP = "localhost"
 PORT = "12499"
 
-NACOS_ENABLE = True
+NACOS_ENABLE = False
 
 SERVER_ADDRESSES = "http://localhost:8848"
 NAMESPACE = "public"
@@ -70,7 +70,8 @@ def updated_config():
         os.environ[_config] = config[_config]
 
 def get_commit_info(repository_id, commit_id):
-    service_ip, service_port = get_service("backend")
+    # service_ip, service_port = get_service("backend")
+    service_ip, service_port = "127.0.0.1", "12888"
     params = {
         "repo_id": repository_id,
         "commit_hash": commit_id
@@ -133,8 +134,7 @@ def inference():
     try:
         raw_data = request.get_data(as_text=True)
         commits = json.loads(raw_data)
-        print("raw_data: "+raw_data)
-        print(commits)
+        print("commits: "+ str(commits))
         if len(commits) == 0 or type(commits) != list:
             raise Exception()
         for commit in commits:
